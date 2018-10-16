@@ -1,0 +1,143 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"><meta name="author" content="John Doe"><meta name="renderer" content="webkit"><meta name="copyright" content="John Doe"><meta name="keywords" content="Hexo"><meta name="description" content="null"><meta name="Cache-Control" content="no-cache"><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><title>Netty线程模型笔记 · Mr.Wu's Blog</title><link rel="stylesheet" href="/css/style.css?v=2018.7.9"><link rel="stylesheet" href="/css/animation.css?v=2018.7.9"><link rel="icon" href="/img/assets/favicon.ico"><link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css?version=1.5.6"><!-- scripts--><script>(function( w ){
+  "use strict";
+  // rel=preload support test
+  if( !w.loadCSS ){
+    w.loadCSS = function(){};
+  }
+  // define on the loadCSS obj
+  var rp = loadCSS.relpreload = {};
+  // rel=preload feature support test
+  // runs once and returns a function for compat purposes
+  rp.support = (function(){
+    var ret;
+    try {
+      ret = w.document.createElement( "link" ).relList.supports( "preload" );
+    } catch (e) {
+      ret = false;
+    }
+    return function(){
+      return ret;
+    };
+  })();
+
+  // if preload isn't supported, get an asynchronous load by using a non-matching media attribute
+  // then change that media back to its intended value on load
+  rp.bindMediaToggle = function( link ){
+    // remember existing media attr for ultimate state, or default to 'all'
+    var finalMedia = link.media || "all";
+
+    function enableStylesheet(){
+      link.media = finalMedia;
+    }
+
+    // bind load handlers to enable media
+    if( link.addEventListener ){
+      link.addEventListener( "load", enableStylesheet );
+    } else if( link.attachEvent ){
+      link.attachEvent( "onload", enableStylesheet );
+    }
+
+    // Set rel and non-applicable media type to start an async request
+    // note: timeout allows this to happen async to let rendering continue in IE
+    setTimeout(function(){
+      link.rel = "stylesheet";
+      link.media = "only x";
+    });
+    // also enable media after 3 seconds,
+    // which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
+    setTimeout( enableStylesheet, 3000 );
+  };
+
+  // loop through link elements in DOM
+  rp.poly = function(){
+    // double check this to prevent external calls from running
+    if( rp.support() ){
+      return;
+    }
+    var links = w.document.getElementsByTagName( "link" );
+    for( var i = 0; i < links.length; i++ ){
+      var link = links[ i ];
+      // qualify links to those with rel=preload and as=style attrs
+      if( link.rel === "preload" && link.getAttribute( "as" ) === "style" && !link.getAttribute( "data-loadcss" ) ){
+        // prevent rerunning on link
+        link.setAttribute( "data-loadcss", true );
+        // bind listeners to toggle media back
+        rp.bindMediaToggle( link );
+      }
+    }
+  };
+
+  // if unsupported, run the polyfill
+  if( !rp.support() ){
+    // run once at least
+    rp.poly();
+
+    // rerun poly on an interval until onload
+    var run = w.setInterval( rp.poly, 500 );
+    if( w.addEventListener ){
+      w.addEventListener( "load", function(){
+        rp.poly();
+        w.clearInterval( run );
+      } );
+    } else if( w.attachEvent ){
+      w.attachEvent( "onload", function(){
+        rp.poly();
+        w.clearInterval( run );
+      } );
+    }
+  }
+
+
+  // commonjs
+  if( typeof exports !== "undefined" ){
+    exports.loadCSS = loadCSS;
+  }
+  else {
+    w.loadCSS = loadCSS;
+  }
+}( typeof global !== "undefined" ? global : this ) );</script><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js" defer></script><script src="/js/main.js?v=2018.7.9" defer></script><!-- fancybox--><link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" defer></script><!-- busuanzi--><script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script></head><body><section class="profile-close" id="cxo-profile"><div class="profile-avatar"><i class="fa fa-caret-left"></i><img src="/img/assets/060E.png"></div><!--.profile-saying
+  i.fa.fa-comment
+  .saying--><div class="cxo-profile-inner"><div class="profile-name">乌猿宅</div><div class="profile-signature">for me</div><div class="read-progress"></div></div></section><header id="cxo-intro" style="height: 70vh;background-image: url(/img/intro/Konachan.com.jpg);"><nav id="cxo-intro-nav"><section><div class="intro-nav-title"><a href="/">Mr.Wu's Blog</a></div><div class="intro-nav-label-box"><a href="/">Home</a><a href="/about/">About</a><a href="/archives/">Archives</a><a href="/tags/">Tags</a></div><i class="fa fa-bars intro-nav-menu"><div class="intro-nav-drop"><a href="/">Home</a><a href="/about/">About</a><a href="/archives/">Archives</a><a href="/tags/">Tags</a></div></i><div class="clear"></div></section></nav><h1 class="post-title">Netty线程模型笔记</h1><div class="post-intros"><div class="post-intro-meta"><span class="post-intro-time"><i class="post-intro-calendar fa fa-edit"></i><span>2017-10-06</span></span></div></div></header><article class="cxo-up" id="cxo-content-outer"><section id="cxo-content-inner"><article class="article-entry" id="post"><h2 id="Netty线程模型笔记"><a href="#Netty线程模型笔记" class="headerlink" title="Netty线程模型笔记"></a>Netty线程模型笔记</h2><hr>
+<p>原文:<a href="https://my.oschina.net/7001/blog/1480153" target="_blank" rel="noopener">https://my.oschina.net/7001/blog/1480153</a></p>
+<p>Netty同时支持Reactor单线程模型 、Reactor多线程模型和Reactor主从多线程模型，用户可根据启动参数配置在这三种模型之间切换。Netty线程模型原理图如下：<br><img src="https://res.cloudinary.com/woo502/image/upload/v1539693607/blog/204356_gPBr_2663573.png" alt="enter image description here"></p>
+<p>服务端启动时，通常会创建两个NioEventLoopGroup实例，对应了两个独立的Reactor线程池。常见服务端启动代码实现如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">EventLoopGroup bossGroup = new NioEventLoopGroup(1);</span><br><span class="line">EventLoopGroup workerGroup = new NioEventLoopGroup();</span><br><span class="line">try &#123;</span><br><span class="line">    ServerBootstrap b = new ServerBootstrap();</span><br><span class="line">    b.group(bossGroup, workerGroup)</span><br><span class="line">     .channel(NioServerSocketChannel.class)</span><br><span class="line">     .option(ChannelOption.SO_BACKLOG, 100)</span><br><span class="line">     .handler(new LoggingHandler(LogLevel.INFO))</span><br><span class="line">     .childHandler(new ChannelInitializer&lt;SocketChannel&gt;() &#123;</span><br><span class="line">         @Override</span><br><span class="line">         public void initChannel(SocketChannel ch) throws Exception &#123;</span><br><span class="line">               ......</span><br></pre></td></tr></table></figure>
+<p>bossGroup负责处理客户端的连接请求，workerGroup负责处理I/O相关的操作，执行系统Task、定时任务Task等。</p>
+<p>用户可根据服务端引导类ServerBootstrap配置参数选择Reactor线程模型，进而最大限度地满足用户的定制化需求；同时，为了最大限度地提升性能，netty很多地方采用了无锁化设计，如为每个Channel绑定唯一的EventLoop，这意味着同一个Channel生命周期内的所有事件都将由同一个Reactor线程来完成，这种串行化处理方式有效地避免了多线程操作之间锁的竞争和上下文切换带来的开销。此外，每个Reactor线程配备了一个task队列和Delay task队列，分别用于存放系统Task和周期性Task，也就是说每个Reactor线程不仅要处理I/O事件，还会处理一些系统任务和调度任务。</p>
+<h4 id="EventLoop家族"><a href="#EventLoop家族" class="headerlink" title="EventLoop家族"></a>EventLoop家族</h4><p>EventLoop又叫事件循环，旨在通过运行任务来处理在连接的生命周期内发生的事件。Netty的EventLoop是协同设计的一部分，主要采用了两个基本的API：并发和网络编程。首先，io.netty.util.concurrent包构建在JDK的java.util.concurrent包上，用来提供线程执行器。其次，io.netty.channel包中的类，为了与Channel的事件进行交互，扩展了io.netty.util.concurrent包中的接口和类。下面通过类图来说明：</p>
+<p><img src="https://res.cloudinary.com/woo502/image/upload/v1539693650/blog/104358_HC2k_2663573.png" alt="enter image description here"></p>
+<h4 id="成员简介"><a href="#成员简介" class="headerlink" title="成员简介"></a>成员简介</h4><p>首先从<strong>io.netty.util.concurrent</strong>开始：</p>
+<p>EventExecutorGroup：字面含义是事件执行器组，管理着一组EventExecutor，负责通过其next()方法提供EventExecutor的使用，并负责管理这些EventExecutor的生命周期。EventExecutorGroup扩展了JDK的ScheduledExecutorService，使得其子类具有提交执行调度任务的能力；同时还扩展了Iterable，说明EventExecutorGroup是可迭代的。此外，EventExecutorGroup还定义了优雅退出的方法。</p>
+<p>AbstractEventExecutorGroup：EventExecutorGroup的抽象实现，并没有提供新的API，只是简单的为EventExecutorGroup中定义的方法提供了默认实现。EventExecutorGroup本身并不能执行任务，它首先通过next()选择一个EventExecutor对象，然后将执行任务的工作都是委托给这个对象。换句话说，具体实现由EventExecutor的子类来完成。</p>
+<p>MultithreadEventExecutorGroup：EventExecutorGroup的抽象实现，内部组合了多个EventExecutor用于对外提供服务，并负责管理一组EventExecutor实例。它还提供了抽象方法newChild用于构造EventExecutor实例，由子类提供实现，便于构造定制化的EventExecutor。它还聚合了一个EventExecutorChooser对象，用于定制通过next从数组中选择EventExecutor对象的规则。</p>
+<p>DefaultEventExecutorGroup：EventExecutorGroup的默认实现，当需要使用DefaultEventExecutor来执行任务时，可使用该实现，比较少用。</p>
+<p>EventExecutor：事件执行器，它是一个只使用一个线程来执行任务的特殊线程池，其扩展了EventExecutorGroup，主要是为了方便代理EventExecutorGroup中的方法；此外，EventExecutor中也定义一些自己的API，如：用于识别线程身份的方法inEventLoop，创建各种通知器Promise的方法。</p>
+<p>AbstractEventExecutor：EventExecutor的抽象实现，其实现了EventExecutorGroup中的抽象方法，提交任务的方法委托给父类AbstractExecutorService来完成，但不支持提交调度任务，调用schedule相关方法都会抛出UnsupportedOperationException。此外，为了实现iterator，其内部定义了一个只能包含一个元素的Collection，且这个元素就是当前EventExecutor实例，因此迭代AbstractEventExecutor只会返回自身实例。用户可直接调用next方法，默认也是返回当前EventExecutor实例，更方便快捷。</p>
+<p>AbstractScheduledEventExecutor：EventExecutor的抽象实现，主要为了支持调度任务的执行。其持有一个PriorityQueue用于存放调度任务，并实现了ScheduledExecutorService中定义的提交调度任务的方法。</p>
+<p>OrderedEventExecutor：它是一个标识接口，没有任何方法和属性，仅仅表明实现该接口的类拥有按顺序串行执行任务的能力。</p>
+<p>SingleThreadEventExecutor：一个可执行普通任务和调度任务的单线程执行器，也就是说，提交到该线程池的所有任务都有同一个线程来完成。内部具有一个阻塞队列用于保存所有提交到该执行器的任务。同时，其扩展了OrderedEventExecutor，表明需要按顺序串行执行所有提交的任务，这里体现了Netty无锁化设计。该接口实现了执行任务内部运作逻辑，后续会对其源码进行深入分析。即使如此，由于它还没有和特定的Selector绑定，因此不能执行I/O相关的操作。</p>
+<p><strong>io.netty.channel</strong>：</p>
+<p>EventLoopGroup：Event Loop线程组，用于管理一组EventLoop对外提供服务，其扩展了EventExecutorGroup，同时定义了注册Channel的方法，用于将一个EventLoop与Channel绑定。</p>
+<p>MultithreadEventLoopGroup：EventLoopGroup的抽象实现，初始化时会确认用于IO操作的EventLoop线程数量，默认值是处理器个数的2倍。从EventLoopGroup继承的register方法主要委托给next返回的EventLoop来完成。同时还扩展了MultithreadEventExecutorGroup，这样从EventExecutorGroup继承的方法都得到默认实现，但从MultithreadEventExecutorGroup中继承的newChild没有默认实现，它需要由由最终子类来实现。</p>
+<p>DefaultEventLoopGroup：用于只能用于本地传输的EventLoop实现。</p>
+<p>EventLoop：一旦与Channel绑定，将处理该Channel上的所有I/O操作。EventLoop可同时处理多个Channel中I/O操作，也可以只处理一个Channel上的I/O操作，具体由不同网络I/O确定。如Oio只能处理单个Channel的I/O操作，NIO则可以处理多个Channel的I/O操作。EventLoop所有子类都将顺序串行执行任务，因为其扩展了OrderedEventExecutor。</p>
+<p>SingleThreadEventLoop：EventLoop的抽象实现，同时扩展了SingleThreadEventExecutor，负责用单个线程来执行所有提交到当前EventLoop的任务。SingleThreadEventLoop内部持有一个tailTasks队列，不知道干嘛用，目前内部也没有任何地方调用。SingleThreadEventLoop中主要实现了register相关方法。不同网络I/O类型通过扩展该类来完成底层实现。</p>
+<p>ThreadPerChannelEventLoop：主要用于Oio的EventLoop实现，一个EventLoop只处理一个Channel的I/O操作。</p>
+<p><strong>io.netty.channel.nio</strong>：</p>
+<p>NioEventLoopGroup：扩展自MultithreadEventLoopGroup，定义NIO的独特实现，主要实现了newChild方法。对于用户，代码中使用较多的也就NioEventLoopGroup了。</p>
+<p>NioEventLoop：NIO实现，内部聚合了Java Selector，使得EventLoop成为一个真正意义的Reactor线程。内部除了实现Selector相关的一些操作，同时实现了执行任务的核心逻辑run方法。后续会详细分析它的源码。</p>
+<h4 id="线程管理"><a href="#线程管理" class="headerlink" title="线程管理"></a>线程管理</h4><p>Netty线程模型的卓越性能取决于它对当前执行的Thread的身份确定，也就是说，确定他是否是分配给当前Channel以及它的EventLoop的那个线程（通过调用inEventLoop(Thread)）。</p>
+<p>如果当前调用线程正是支撑EventLoop的线程，那么所提交的代码块都将被直接执行。否则，EventLoop将调度该任务以便以后执行，并将它放入到内部队列中。当EventLoop下次处理它的事件时，它会执行队列中的任务、事件。这也解释了任何的Thread是如何与Channel直接交互而无需在ChannelHandler中进行额外同步的。不过，这仅对Netty4或更高的版本有效，在Netty3中只保证了入站事件在EventLoop对应的线程中执行，所有的出站事件都由调用线程处理，调用线程可能是EventLoop线程也可能是别的线程，因此，需要在ChannelHandler中对出站事件的处理进行同步，保证线程安全。</p>
+<p>每个EventLoop都有它自己的任务队列，独立于其他的EventLoop。实际开发过程中，绝不应该阻塞当前I/O线程，或是将一个长时间运行的任务放入任务队列，因为它将阻塞需要在同一个线程上执行的任何其他任务。</p>
+<p>此外，需注意EventLoop的分配方式对ThreadLocal使用的影响。由于NIO实现中EventLoop通常用于支持多个Channel，所以对于所有相关联的Channel来说，ThreadLocal都是一样的。</p>
+<h4 id="线程模型选择"><a href="#线程模型选择" class="headerlink" title="线程模型选择"></a>线程模型选择</h4><p>下面以服务端的配置为例，说明如何选择不同的线程模型。</p>
+<p><strong>单线程模型</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">EventLoopGroup bossGroup = new NioEventLoopGroup(1);</span><br><span class="line">try &#123;</span><br><span class="line">       ServerBootstrap b = new ServerBootstrap();</span><br><span class="line">       b.group(bossGroup)</span><br><span class="line">        .channel(NioServerSocketChannel.class)</span><br><span class="line">       ......</span><br></pre></td></tr></table></figure>
+<p>以上示例中实例化了一个NIOEventLoopGroup，并传入线程数量为1，然后调用ServerBootstrap的group方法绑定线程组，看实现：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">public ServerBootstrap group(EventLoopGroup group) &#123;</span><br><span class="line">    return group(group, group);</span><br><span class="line">&#125;</span><br><span class="line">public ServerBootstrap group(EventLoopGroup parentGroup, EventLoopGroup childGroup) &#123;</span><br><span class="line">    super.group(parentGroup);</span><br><span class="line">    if (childGroup == null) &#123;</span><br><span class="line">        throw new NullPointerException(&quot;childGroup&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">    if (this.childGroup != null) &#123;</span><br><span class="line">        throw new IllegalStateException(&quot;childGroup set already&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">    this.childGroup = childGroup;</span><br><span class="line">    return this;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>从源码可知，实际仍然绑定了 bossGroup 和 workerGroup，只是都是同一个NioEventLoopGroup实例而已，这样Netty中的acceptor和后续的所有客户端连接的IO操作都是在一个线程中处理，这就相当于Reactor的单线程模型。</p>
+<p><strong>多线程模型</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">EventLoopGroup bossGroup = new NioEventLoopGroup(1);</span><br><span class="line">EventLoopGroup workerGroup = new NioEventLoopGroup();</span><br><span class="line">try &#123;</span><br><span class="line">      ServerBootstrap b = new ServerBootstrap();</span><br><span class="line">      b.group(bossGroup, workerGroup)</span><br><span class="line">       .channel(NioServerSocketChannel.class)</span><br><span class="line">       ......</span><br></pre></td></tr></table></figure>
+<p>创建1个线程的bossGroup线程组，这个线程负责处理客户端的连接请求，而workerGroup默认使用处理器个数*2的线程数量来处理I/O操作。这就相当于Reactor的多线程模型。</p>
+<p><strong>主从多线程模型</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">EventLoopGroup bossGroup = new NioEventLoopGroup(4);</span><br><span class="line">EventLoopGroup workerGroup = new NioEventLoopGroup();</span><br><span class="line">try &#123;</span><br><span class="line">      ServerBootstrap b = new ServerBootstrap();</span><br><span class="line">      b.group(bossGroup, workerGroup)</span><br><span class="line">       .channel(NioServerSocketChannel.class)</span><br><span class="line">       ......</span><br></pre></td></tr></table></figure></article><!-- lincense--><div class="license-wrapper"><p> <span>Author:  </span><a href="http://yoursite.com">John Doe</a></p><p> <span>Link:  </span><a href="http://yoursite.com/2017/10/06/Netty线程模型笔记/">http://yoursite.com/2017/10/06/Netty线程模型笔记/</a></p><p> <span>Copyright:  </span><span>All articles in this blog are licensed under <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/3.0">CC BY-NC-SA 3.0</a> unless stating additionally.</span></p></div><div class="post-paginator"><a class="prevSlogan" href="/2017/10/16/Spring-Cloud之深入理解Eureka/" title="Spring Cloud之深入理解Eureka"><span>< PreviousPost</span><br><span class="prevTitle">Spring Cloud之深入理解Eureka</span></a><div class="clear"></div></div><div id="comment"></div></section></article><footer id="cxo-footer-outer"><div id="cxo-footer-inner"><p class="footer-container"><span>Site by </span><a href="http://hexo.io"><span>Hexo</span></a><span> | theme </span><a href="https://github.com/Longlongyu/hexo-theme-Cxo"><span>Cxo</span></a></p><i class="fa fa-user"> </i><span id="busuanzi_value_site_uv"></span><span> | </span><i class="fa fa-eye"> </i><span id="busuanzi_value_site_pv"></span></div></footer><!-- catelog--><div class="toc-wrapper" style="top: 70vh;"><div class="toc-catalog"><i class="fa fa-list"> </i><span>CATALOG</span></div><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Netty线程模型笔记"><span class="toc-number">1.</span> <span class="toc-text">Netty线程模型笔记</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#EventLoop家族"><span class="toc-number">1.0.1.</span> <span class="toc-text">EventLoop家族</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#成员简介"><span class="toc-number">1.0.2.</span> <span class="toc-text">成员简介</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#线程管理"><span class="toc-number">1.0.3.</span> <span class="toc-text">线程管理</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#线程模型选择"><span class="toc-number">1.0.4.</span> <span class="toc-text">线程模型选择</span></a></li></ol></li></ol></li></ol></div><!-- top--><i class="fa fa-arrow-up close" id="go-up" aria-hidden="true"></i></body></html>
