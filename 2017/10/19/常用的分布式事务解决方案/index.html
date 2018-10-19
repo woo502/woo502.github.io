@@ -300,7 +300,7 @@
 </ul>
 <p><strong>方案2：基于可靠消息服务的分布式事务</strong></p>
 <p>这种实现分布式事务的方式需要通过消息中间件来实现。假设有A和B两个系统，分别可以处理任务A和任务B。此时系统A中存在一个业务流程，需要将任务A和任务B在同一个事务中处理。下面来介绍基于消息中间件来实现这种分布式事务。</p>
-<center><br><img src="https://res.cloudinary.com/woo502/image/upload/v1539927617/blog/1620fc30782107d1.webp" alt="enter image description here"><br></center>
+<center><br><img src="https://res.cloudinary.com/woo502/image/upload/v1539927617/blog/1620fc30782107d1.webp" alt=""><br></center>
 
 <ul>
 <li>在系统A处理任务A前，首先向消息中间件发送一条消息</li>
@@ -318,7 +318,7 @@
 <li>系统A完成任务A后，到任务B执行完成之间，会存在一定的时间差。在这个时间差内，整个系统处于数据不一致的状态，但这短暂的不一致性是可以接受的，因为经过短暂的时间后，系统又可以保持数据一致性，满足BASE理论。</li>
 </ul>
 <p>上述过程中，如果任务A处理失败，那么需要进入回滚流程，如下图所示：</p>
-<center><br><img src="https://res.cloudinary.com/woo502/image/upload/v1539928008/blog/1620fc307be6c55d.webp" alt="enter image description here"><br></center>
+<center><br><img src="https://res.cloudinary.com/woo502/image/upload/v1539928008/blog/1620fc307be6c55d.webp" alt=""><br></center>
 
 <ul>
 <li>若系统A在处理任务A时失败，那么就会向消息中间件发送Rollback请求。和发送Commit请求一样，系统A发完之后便可以认为回滚已经完成，它便可以去做其他的事情。</li>
@@ -326,7 +326,7 @@
 </ul>
 <p>此时系统又处于一致性状态，因为任务A和任务B都没有执行。</p>
 <p>上面所介绍的Commit和Rollback都属于理想情况，但在实际系统中，Commit和Rollback指令都有可能在传输途中丢失。那么当出现这种情况的时候，消息中间件是如何保证数据一致性呢？——答案就是超时询问机制。</p>
-<center><br><img src="https://res.cloudinary.com/woo502/image/upload/v1539927894/blog/1620fc307c2d185e.webp" alt="enter image description here"><br></center>
+<center><br><img src="https://res.cloudinary.com/woo502/image/upload/v1539927894/blog/1620fc307c2d185e.webp" alt=""><br></center>
 
 <p>系统A除了实现正常的业务流程外，还需提供一个事务询问的接口，供消息中间件调用。当消息中间件收到一条事务型消息后便开始计时，如果到了超时时间也没收到系统A发来的Commit或Rollback指令的话，就会主动调用系统A提供的事务询问接口询问该系统目前的状态。该接口会返回三种结果：</p>
 <ul>
@@ -340,7 +340,7 @@
 <p>下面来说一说消息投递过程的可靠性保证。</p>
 <p>当上游系统执行完任务并向消息中间件提交了Commit指令后，便可以处理其他任务了，此时它可以认为事务已经完成，接下来消息中间件<strong>一定会保证消息被下游系统成功消费掉！</strong>那么这是怎么做到的呢？这由消息中间件的投递流程来保证。<br>消息中间件向下游系统投递完消息后便进入阻塞等待状态，下游系统便立即进行任务的处理，任务处理完成后便向消息中间件返回应答。消息中间件收到确认应答后便认为该事务处理完毕！</p>
 <p>如果消息在投递过程中丢失，或消息的确认应答在返回途中丢失，那么消息中间件在等待确认应答超时之后就会重新投递，直到下游消费者返回消费成功响应为止。当然，一般消息中间件可以设置消息重试的次数和时间间隔，比如：当第一次投递失败后，每隔五分钟重试一次，一共重试3次。如果重试3次之后仍然投递失败，那么这条消息就需要人工干预。</p>
-<center><br><img src="https://res.cloudinary.com/woo502/image/upload/v1539928122/blog/1620fc3078194980.webp" alt="enter image description here"><br></center><br><center><br><img src="https://res.cloudinary.com/woo502/image/upload/v1539928144/blog/1620fc308ece8d2a.webp" alt="enter image description here"><br></center>
+<center><br><img src="https://res.cloudinary.com/woo502/image/upload/v1539928122/blog/1620fc3078194980.webp" alt=""><br></center><br><center><br><img src="https://res.cloudinary.com/woo502/image/upload/v1539928144/blog/1620fc308ece8d2a.webp" alt=""><br></center>
 
 <blockquote>
 <p>有的同学可能要问：消息投递失败后为什么不回滚消息，而是不断尝试重新投递？</p>
@@ -354,7 +354,7 @@
 <p>异步能提升系统性能，但随之会增加系统复杂度；而同步虽然降低系统并发度，但实现成本较低。因此，在对并发度要求不是很高的情况下，或者服务器资源较为充裕的情况下，我们可以选择同步来降低系统的复杂度。<br>我们知道，消息中间件是一个独立于业务系统的第三方中间件，它不和任何业务系统产生直接的耦合，它也不和用户产生直接的关联，它一般部署在独立的服务器集群上，具有良好的可扩展性，所以不必太过于担心它的性能，如果处理速度无法满足我们的要求，可以增加机器来解决。而且，即使消息中间件处理速度有一定的延迟那也是可以接受的，因为前面所介绍的BASE理论就告诉我们了，我们追求的是最终一致性，而非实时一致性，因此消息中间件产生的时延导致事务短暂的不一致是可以接受的。</p>
 <p><strong>方案3：最大努力通知（定期校对）</strong></p>
 <p>最大努力通知也被称为定期校对，其实在方案二中已经包含，这里再单独介绍，主要是为了知识体系的完整性。这种方案也需要消息中间件的参与，其过程如下：</p>
-<p><img src="https://res.cloudinary.com/woo502/image/upload/v1539928264/blog/1620fc307c59ccfa.webp" alt="enter image description here"></p>
+<p><img src="https://res.cloudinary.com/woo502/image/upload/v1539928264/blog/1620fc307c59ccfa.webp" alt=""></p>
 <ul>
 <li>上游系统在完成任务后，向消息中间件同步地发送一条消息，确保消息中间件成功持久化这条消息，然后上游系统可以去做别的事情了；</li>
 <li>消息中间件收到消息后负责将该消息同步投递给相应的下游系统，并触发下游系统的任务执行；</li>
@@ -429,7 +429,7 @@
 <p><strong>TCC全局事务必须基于RM本地事务来实现全局事务</strong> </p>
 <p>TCC服务是由Try/Confirm/Cancel业务构成的，其Try/Confirm/Cancel业务在执行时，会访问资源管理器（Resource Manager，下文简称RM）来存取数据。这些存取操作，必须要参与RM本地事务，以使其更改的数据要么都commit，要么都rollback。</p>
 <p>这一点不难理解，考虑一下如下场景：</p>
-<p><img src="https://res.cloudinary.com/woo502/image/upload/v1539928494/blog/1620fc316321942a.webp" alt="enter image description here"></p>
+<p><img src="https://res.cloudinary.com/woo502/image/upload/v1539928494/blog/1620fc316321942a.webp" alt=""></p>
 <p>假设图中的服务B没有基于RM本地事务（以RDBS为例，可通过设置auto-commit为true来模拟），那么一旦[B:Try]操作中途执行失败，TCC事务框架后续决定回滚全局事务时，该[B:Cancel]则需要判断[B:Try]中哪些操作已经写到DB、哪些操作还没有写到DB：假设[B:Try]业务有5个写库操作，[B:Cancel]业务则需要逐个判断这5个操作是否生效，并将生效的操作执行反向操作。</p>
 <p>不幸的是，由于[B:Cancel]业务也有n（0&lt;=n&lt;=5）个反向的写库操作，此时一旦[B:Cancel]也中途出错，则后续的[B:Cancel]执行任务更加繁重。因为，相比第一次[B:Cancel]操作，后续的[B:Cancel]操作还需要判断先前的[B:Cancel]操作的n（0&lt;=n&lt;=5）个写库中哪几个已经执行、哪几个还没有执行，这就涉及到了幂等性问题。而对幂等性的保障，又很可能还需要涉及额外的写库操作，该写库操作又会因为没有RM本地事务的支持而存在类似问题。。。可想而知，如果不基于RM本地事务，TCC事务框架是无法有效的管理TCC全局事务的。</p>
 <p>反之，基于RM本地事务的TCC事务，这种情况则会很容易处理：[B:Try]操作中途执行失败，TCC事务框架将其参与RM本地事务直接rollback即可。后续TCC事务框架决定回滚全局事务时，在知道“[B:Try]操作涉及的RM本地事务已经rollback”的情况下，根本无需执行[B:Cancel]操作。</p>
