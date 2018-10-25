@@ -1,0 +1,170 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"><meta name="author" content="John Doe"><meta name="renderer" content="webkit"><meta name="copyright" content="John Doe"><meta name="keywords" content="Hexo"><meta name="description" content="null"><meta name="Cache-Control" content="no-cache"><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><title>架构师学习4 · Mr.Wu's Blog</title><link rel="stylesheet" href="/css/style.css?v=2018.7.9"><link rel="stylesheet" href="/css/animation.css?v=2018.7.9"><link rel="icon" href="/img/assets/favicon.ico"><link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css?version=1.5.6"><!-- scripts--><script>(function( w ){
+  "use strict";
+  // rel=preload support test
+  if( !w.loadCSS ){
+    w.loadCSS = function(){};
+  }
+  // define on the loadCSS obj
+  var rp = loadCSS.relpreload = {};
+  // rel=preload feature support test
+  // runs once and returns a function for compat purposes
+  rp.support = (function(){
+    var ret;
+    try {
+      ret = w.document.createElement( "link" ).relList.supports( "preload" );
+    } catch (e) {
+      ret = false;
+    }
+    return function(){
+      return ret;
+    };
+  })();
+
+  // if preload isn't supported, get an asynchronous load by using a non-matching media attribute
+  // then change that media back to its intended value on load
+  rp.bindMediaToggle = function( link ){
+    // remember existing media attr for ultimate state, or default to 'all'
+    var finalMedia = link.media || "all";
+
+    function enableStylesheet(){
+      link.media = finalMedia;
+    }
+
+    // bind load handlers to enable media
+    if( link.addEventListener ){
+      link.addEventListener( "load", enableStylesheet );
+    } else if( link.attachEvent ){
+      link.attachEvent( "onload", enableStylesheet );
+    }
+
+    // Set rel and non-applicable media type to start an async request
+    // note: timeout allows this to happen async to let rendering continue in IE
+    setTimeout(function(){
+      link.rel = "stylesheet";
+      link.media = "only x";
+    });
+    // also enable media after 3 seconds,
+    // which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
+    setTimeout( enableStylesheet, 3000 );
+  };
+
+  // loop through link elements in DOM
+  rp.poly = function(){
+    // double check this to prevent external calls from running
+    if( rp.support() ){
+      return;
+    }
+    var links = w.document.getElementsByTagName( "link" );
+    for( var i = 0; i < links.length; i++ ){
+      var link = links[ i ];
+      // qualify links to those with rel=preload and as=style attrs
+      if( link.rel === "preload" && link.getAttribute( "as" ) === "style" && !link.getAttribute( "data-loadcss" ) ){
+        // prevent rerunning on link
+        link.setAttribute( "data-loadcss", true );
+        // bind listeners to toggle media back
+        rp.bindMediaToggle( link );
+      }
+    }
+  };
+
+  // if unsupported, run the polyfill
+  if( !rp.support() ){
+    // run once at least
+    rp.poly();
+
+    // rerun poly on an interval until onload
+    var run = w.setInterval( rp.poly, 500 );
+    if( w.addEventListener ){
+      w.addEventListener( "load", function(){
+        rp.poly();
+        w.clearInterval( run );
+      } );
+    } else if( w.attachEvent ){
+      w.attachEvent( "onload", function(){
+        rp.poly();
+        w.clearInterval( run );
+      } );
+    }
+  }
+
+
+  // commonjs
+  if( typeof exports !== "undefined" ){
+    exports.loadCSS = loadCSS;
+  }
+  else {
+    w.loadCSS = loadCSS;
+  }
+}( typeof global !== "undefined" ? global : this ) );</script><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js" defer></script><script src="/js/main.js?v=2018.7.9" defer></script><!-- fancybox--><link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" defer></script><!-- busuanzi--><script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script></head><body><section class="profile-close" id="cxo-profile"><div class="profile-avatar"><i class="fa fa-caret-left"></i><img src="/img/assets/060E.png"></div><!--.profile-saying
+  i.fa.fa-comment
+  .saying--><div class="cxo-profile-inner"><div class="profile-name">乌猿宅</div><div class="profile-signature">for me</div><div class="read-progress"></div></div></section><header id="cxo-intro" style="height: 70vh;background-image: url(/img/intro/Konachan.com.jpg);"><nav id="cxo-intro-nav"><section><div class="intro-nav-title"><a href="/">Mr.Wu's Blog</a></div><div class="intro-nav-label-box"><a href="/">Home</a><a href="/about/">About</a><a href="/archives/">Archives</a><a href="/tags/">Tags</a></div><i class="fa fa-bars intro-nav-menu"><div class="intro-nav-drop"><a href="/">Home</a><a href="/about/">About</a><a href="/archives/">Archives</a><a href="/tags/">Tags</a></div></i><div class="clear"></div></section></nav><h1 class="post-title">架构师学习4</h1><div class="post-intros"><div class="post-intro-meta"><span class="post-intro-time"><i class="post-intro-calendar fa fa-edit"></i><span>2018-06-09</span></span></div></div></header><article class="cxo-up" id="cxo-content-outer"><section id="cxo-content-inner"><article class="article-entry" id="post"><h3 id="单服务器高性能模式"><a href="#单服务器高性能模式" class="headerlink" title="单服务器高性能模式"></a>单服务器高性能模式</h3><p>站在架构师的角度，当然需要特别关注高性能架构的设计。高性能架构设计主要集中在两方面：</p>
+<ul>
+<li>尽量提升单服务器的性能，将单服务器的性能发挥到极致。</li>
+<li>如果单服务器无法支撑性能，设计服务器集群方案。</li>
+</ul>
+<p>除了以上两点，最终系统能否实现高性能，还和具体的实现及编码相关。但架构设计是高性能的基础，如果架构设计没有做到高性能，则后面的具体实现和编码能提升的空间是有限的。形象地说，架构设计决定了系统性能的上限，实现细节决定了系统性能的下限。</p>
+<p>单服务器高性能的关键之一就是<strong>服务器采取的并发模型</strong>，并发模型有如下两个关键设计点：</p>
+<ul>
+<li>服务器如何管理连接。</li>
+<li>服务器如何处理请求。</li>
+</ul>
+<p>以上两个设计点最终都和操作系统的 I/O 模型及进程模型相关。</p>
+<ul>
+<li>I/O 模型：阻塞、非阻塞、同步、异步。</li>
+<li>进程模型：单进程、多进程、多线程。</li>
+</ul>
+<h4 id="PCC"><a href="#PCC" class="headerlink" title="PCC"></a>PCC</h4><p>PPC 是 Process Per Connection 的缩写，其含义是指每次有新的连接就新建一个进程去专门处理这个连接的请求，这是传统的 UNIX 网络服务器所采用的模型。基本的流程图是：</p>
+<p><img src="https://res.cloudinary.com/woo502/image/upload/v1540450234/blog/8941e9ef9286493d67e9da277b9ee799.png" alt=""></p>
+<p>PPC 模式实现简单，比较适合服务器的连接数没那么多的情况，例如数据库服务器。互联网兴起后，服务器的并发和访问量从几十剧增到成千上万，这种模式的弊端就凸显出来了，主要体现在这几个方面：</p>
+<ul>
+<li><p>fork 代价高：站在操作系统的角度，创建一个进程的代价是很高的，需要分配很多内核资源，需要将内存映像从父进程复制到子进程。即使现在的操作系统在复制内存映像时用到了 Copy on Write（写时复制）技术，总体来说创建进程的代价还是很大的。</p>
+</li>
+<li><p>父子进程通信复杂：父进程“fork”子进程时，文件描述符可以通过内存映像复制从父进程传到子进程，但“fork”完成后，父子进程通信就比较麻烦了，需要采用 IPC（Interprocess Communication）之类的进程通信方案。例如，子进程需要在 close 之前告诉父进程自己处理了多少个请求以支撑父进程进行全局的统计，那么子进程和父进程必须采用 IPC 方案来传递信息。</p>
+</li>
+<li><p>支持的并发连接数量有限：如果每个连接存活时间比较长，而且新的连接又源源不断的进来，则进程数量会越来越多，操作系统进程调度和切换的频率也越来越高，系统的压力也会越来越大。因此，一般情况下，PPC 方案能处理的并发连接数量最大也就几百。</p>
+</li>
+</ul>
+<p>PPC 模式中，当连接进来时才 fork 新进程来处理连接请求，由于 fork 进程代价高，用户访问时可能感觉比较慢，prefork 模式的出现就是为了解决这个问题。</p>
+<p><img src="https://res.cloudinary.com/woo502/image/upload/v1540450398/blog/d0f1df9716145a6bd02bb4a83b1fd62e.jpg" alt=""></p>
+<p>prefork 模式和 PPC 一样，还是存在父子进程通信复杂、支持的并发连接数量有限的问题，因此目前实际应用也不多。Apache 服务器提供了 MPM prefork 模式，推荐在需要可靠性或者与旧软件兼容的站点时采用这种模式，默认情况下最大支持 256 个并发连接。</p>
+<h4 id="TPC"><a href="#TPC" class="headerlink" title="TPC"></a>TPC</h4><p>TPC 是 Thread Per Connection 的缩写，其含义是指每次有新的连接就新建一个线程去专门处理这个连接的请求。与进程相比，线程更轻量级，创建线程的消耗比进程要少得多；同时多线程是共享进程内存空间的，线程通信相比进程通信更简单。因此，TPC 实际上是解决或者弱化了 PPC fork 代价高的问题和父子进程通信复杂的问题。</p>
+<p><img src="https://res.cloudinary.com/woo502/image/upload/v1540450537/blog/263798db70ca2509d6ecf95604fe8842.png" alt=""></p>
+<p>TPC 虽然解决了 fork 代价高和进程通信复杂的问题，但是也引入了新的问题，具体表现在：</p>
+<ul>
+<li>创建线程虽然比创建进程代价低，但并不是没有代价，高并发时（例如每秒上万连接）还是有性能问题。</li>
+<li>无须进程间通信，但是线程间的互斥和共享又引入了复杂度，可能一不小心就导致了死锁问题。</li>
+<li>多线程会出现互相影响的情况，某个线程出现异常时，可能导致整个进程退出（例如内存越界）。</li>
+</ul>
+<p>除了引入了新的问题，TPC 还是存在 CPU 线程调度和切换代价的问题。因此，TPC 方案本质上和 PPC 方案基本类似，在并发几百连接的场景下，反而更多地是采用 PPC 的方案，因为 PPC 方案不会有死锁的风险，也不会多进程互相影响，稳定性更高。</p>
+<p>TPC 模式中，当连接进来时才创建新的线程来处理连接请求，虽然创建线程比创建进程要更加轻量级，但还是有一定的代价，而 prethread 模式就是为了解决这个问题。</p>
+<p>由于多线程之间数据共享和通信比较方便，因此实际上 prethread 的实现方式相比 prefork 要灵活一些，常见的实现方式有下面几种：</p>
+<ul>
+<li>主进程 accept，然后将连接交给某个线程处理。</li>
+<li>子线程都尝试去 accept，最终只有一个线程 accept 成功，方案的基本示意图如下：<br><img src="https://res.cloudinary.com/woo502/image/upload/v1540450800/blog/548d9b2ece16bebba532b996a88bbadf.jpg" alt=""></li>
+</ul>
+<h4 id="Reactor"><a href="#Reactor" class="headerlink" title="Reactor"></a>Reactor</h4><p>I/O 多路复用结合线程池，完美地解决了 PPC 和 TPC 的问题，而且“大神们”给它取了一个很牛的名字：Reactor，中文是“反应堆”。联想到“核反应堆”，听起来就很吓人，实际上这里的“反应”不是聚变、裂变反应的意思，而是“<strong>事件反应</strong>”的意思，可以通俗地理解为“<strong>来了一个事件我就有相应的反应</strong>”，这里的“我”就是 Reactor，具体的反应就是我们写的代码，Reactor 会根据事件类型来调用相应的代码进行处理。Reactor 模式也叫 Dispatcher 模式（在很多开源的系统里面会看到这个名称的类，其实就是实现 Reactor 模式的），更加贴近模式本身的含义，即 I/O 多路复用统一监听事件，收到事件后分配（Dispatch）给某个进程。</p>
+<h5 id="1-单-Reactor-单进程-线程"><a href="#1-单-Reactor-单进程-线程" class="headerlink" title="1. 单 Reactor 单进程 / 线程"></a>1. 单 Reactor 单进程 / 线程</h5><p><img src="https://res.cloudinary.com/woo502/image/upload/v1540451743/blog/214701713f4cd942295f423ba158f6b1.png" alt=""></p>
+<p>单 Reactor 单进程的模式优点就是很简单，没有进程间通信，没有进程竞争，全部都在同一个进程内完成。但其缺点也是非常明显，具体表现有：</p>
+<ul>
+<li>只有一个进程，无法发挥多核 CPU 的性能；只能采取部署多个系统来利用多核 CPU，但这样会带来运维复杂度，本来只要维护一个系统，用这种方式需要在一台机器上维护多套系统。</li>
+<li>Handler 在处理某个连接上的业务时，整个进程无法处理其他连接的事件，很容易导致性能瓶颈。</li>
+</ul>
+<p>因此，单 Reactor 单进程的方案在实践中应用场景不多，<strong>只适用于业务处理非常快速的场景</strong>，目前比较著名的开源软件中使用单 Reactor 单进程的是 Redis。</p>
+<h5 id="2-单-Reactor-多线程"><a href="#2-单-Reactor-多线程" class="headerlink" title="2. 单 Reactor 多线程"></a>2. 单 Reactor 多线程</h5><p><img src="https://res.cloudinary.com/woo502/image/upload/v1540451908/blog/7c299316e48b0531328ba39261d1d443.png" alt=""></p>
+<p>单 Reator 多线程方案能够充分利用多核多 CPU 的处理能力，但同时也存在下面的问题：</p>
+<ul>
+<li>多线程数据共享和访问比较复杂。例如，子线程完成业务处理后，要把结果传递给主线程的 Reactor 进行发送，这里涉及共享数据的互斥和保护机制。以 Java 的 NIO 为例，Selector 是线程安全的，但是通过 Selector.selectKeys() 返回的键的集合是非线程安全的，对 selected keys 的处理必须单线程处理或者采取同步措施进行保护。</li>
+<li>Reactor 承担所有事件的监听和响应，只在主线程中运行，瞬间高并发时会成为性能瓶颈。</li>
+</ul>
+<h5 id="3-多-Reactor-多进程-线程"><a href="#3-多-Reactor-多进程-线程" class="headerlink" title="3. 多 Reactor 多进程 / 线程"></a>3. 多 Reactor 多进程 / 线程</h5><p><img src="https://res.cloudinary.com/woo502/image/upload/v1540452041/blog/47918f1429370664d7eb6d0c741f4784.png" alt=""></p>
+<p>多 Reactor 多进程 / 线程的方案看起来比单 Reactor 多线程要复杂，但实际实现时反而更加简单，主要原因是：多 Reactor 多进程 / 线程的方案看起来比单 Reactor 多线程要复杂，但实际实现时反而更加简单，主要原因是：</p>
+<ul>
+<li>父进程和子进程的职责非常明确，父进程只负责接收新连接，子进程负责完成后续的业务处理。</li>
+<li>父进程和子进程的交互很简单，父进程只需要把新连接传给子进程，子进程无须返回数据。</li>
+<li>子进程之间是互相独立的，无须同步共享之类的处理（这里仅限于网络模型相关的 select、read、send 等无须同步共享，“业务处理”还是有可能需要同步共享的）。</li>
+</ul>
+<p>目前著名的开源系统 Nginx 采用的是多 Reactor 多进程，采用多 Reactor 多线程的实现有 Memcache 和 Netty。目前著名的开源系统 Nginx 采用的是多 Reactor 多进程，采用多 Reactor 多线程的实现有 Memcache 和 Netty。</p>
+<h4 id="Proactor"><a href="#Proactor" class="headerlink" title="Proactor"></a>Proactor</h4><p>Proactor 中文翻译为“前摄器”比较难理解，与其类似的单词是 proactive，含义为“主动的”，因此我们照猫画虎翻译为“主动器”反而更好理解。Reactor 可以理解为“来了事件我通知你，你来处理”，而 Proactor 可以理解为“来了事件我来处理，处理完了我通知你”。这里的“我”就是操作系统内核，“事件”就是有新连接、有数据可读、有数据可写的这些 I/O 事件，“你”就是我们的程序代码。</p>
+<p><img src="https://res.cloudinary.com/woo502/image/upload/v1540456419/blog/9d41c2e6ae712a6b815a8021b47a624f.png" alt=""></p>
+<p>理论上 Proactor 比 Reactor 效率要高一些，异步 I/O 能够充分利用 DMA 特性，让 I/O 操作与计算重叠，但要实现真正的异步 I/O，操作系统需要做大量的工作。目前 Windows 下通过 IOCP 实现了真正的异步 I/O，而在 Linux 系统下的 AIO 并不完善，因此在 Linux 下实现高并发网络编程时都是以 Reactor 模式为主。所以即使 Boost.Asio 号称实现了 Proactor 模型，其实它在 Windows 下采用 IOCP，而在 Linux 下是用 Reactor 模式（采用 epoll）模拟出来的异步模型。</p>
+</article><!-- lincense--><div class="license-wrapper"><p> <span>Author:  </span><a href="http://yoursite.com">John Doe</a></p><p> <span>Link:  </span><a href="http://yoursite.com/2018/06/09/架构师学习4/">http://yoursite.com/2018/06/09/架构师学习4/</a></p><p> <span>Copyright:  </span><span>All articles in this blog are licensed under <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/3.0">CC BY-NC-SA 3.0</a> unless stating additionally.</span></p></div><div class="post-paginator"><a class="prevSlogan" href="/2018/06/17/架构师学习3/" title="架构师学习3"><span>< PreviousPost</span><br><span class="prevTitle">架构师学习3</span></a><a class="nextSlogan" href="/2018/05/26/架构师学习2/" title="架构师学习2"><span>NextPost ></span><br><span class="nextTitle">架构师学习2</span></a><div class="clear"></div></div><div id="comment"></div></section></article><footer id="cxo-footer-outer"><div id="cxo-footer-inner"><p class="footer-container"><span>Site by </span><a href="http://hexo.io"><span>Hexo</span></a><span> | theme </span><a href="https://github.com/Longlongyu/hexo-theme-Cxo"><span>Cxo</span></a></p><i class="fa fa-user"> </i><span id="busuanzi_value_site_uv"></span><span> | </span><i class="fa fa-eye"> </i><span id="busuanzi_value_site_pv"></span></div></footer><!-- catelog--><div class="toc-wrapper" style="top: 70vh;"><div class="toc-catalog"><i class="fa fa-list"> </i><span>CATALOG</span></div><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#单服务器高性能模式"><span class="toc-number">1.</span> <span class="toc-text">单服务器高性能模式</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#PCC"><span class="toc-number">1.1.</span> <span class="toc-text">PCC</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#TPC"><span class="toc-number">1.2.</span> <span class="toc-text">TPC</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Reactor"><span class="toc-number">1.3.</span> <span class="toc-text">Reactor</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#1-单-Reactor-单进程-线程"><span class="toc-number">1.3.1.</span> <span class="toc-text">1. 单 Reactor 单进程 / 线程</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#2-单-Reactor-多线程"><span class="toc-number">1.3.2.</span> <span class="toc-text">2. 单 Reactor 多线程</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#3-多-Reactor-多进程-线程"><span class="toc-number">1.3.3.</span> <span class="toc-text">3. 多 Reactor 多进程 / 线程</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Proactor"><span class="toc-number">1.4.</span> <span class="toc-text">Proactor</span></a></li></ol></li></ol></div><!-- top--><i class="fa fa-arrow-up close" id="go-up" aria-hidden="true"></i></body></html>
