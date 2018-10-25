@@ -1,0 +1,186 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"><meta name="author" content="John Doe"><meta name="renderer" content="webkit"><meta name="copyright" content="John Doe"><meta name="keywords" content="Hexo"><meta name="description" content="null"><meta name="Cache-Control" content="no-cache"><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><title>架构师学习3 · Mr.Wu's Blog</title><link rel="stylesheet" href="/css/style.css?v=2018.7.9"><link rel="stylesheet" href="/css/animation.css?v=2018.7.9"><link rel="icon" href="/img/assets/favicon.ico"><link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css?version=1.5.6"><!-- scripts--><script>(function( w ){
+  "use strict";
+  // rel=preload support test
+  if( !w.loadCSS ){
+    w.loadCSS = function(){};
+  }
+  // define on the loadCSS obj
+  var rp = loadCSS.relpreload = {};
+  // rel=preload feature support test
+  // runs once and returns a function for compat purposes
+  rp.support = (function(){
+    var ret;
+    try {
+      ret = w.document.createElement( "link" ).relList.supports( "preload" );
+    } catch (e) {
+      ret = false;
+    }
+    return function(){
+      return ret;
+    };
+  })();
+
+  // if preload isn't supported, get an asynchronous load by using a non-matching media attribute
+  // then change that media back to its intended value on load
+  rp.bindMediaToggle = function( link ){
+    // remember existing media attr for ultimate state, or default to 'all'
+    var finalMedia = link.media || "all";
+
+    function enableStylesheet(){
+      link.media = finalMedia;
+    }
+
+    // bind load handlers to enable media
+    if( link.addEventListener ){
+      link.addEventListener( "load", enableStylesheet );
+    } else if( link.attachEvent ){
+      link.attachEvent( "onload", enableStylesheet );
+    }
+
+    // Set rel and non-applicable media type to start an async request
+    // note: timeout allows this to happen async to let rendering continue in IE
+    setTimeout(function(){
+      link.rel = "stylesheet";
+      link.media = "only x";
+    });
+    // also enable media after 3 seconds,
+    // which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
+    setTimeout( enableStylesheet, 3000 );
+  };
+
+  // loop through link elements in DOM
+  rp.poly = function(){
+    // double check this to prevent external calls from running
+    if( rp.support() ){
+      return;
+    }
+    var links = w.document.getElementsByTagName( "link" );
+    for( var i = 0; i < links.length; i++ ){
+      var link = links[ i ];
+      // qualify links to those with rel=preload and as=style attrs
+      if( link.rel === "preload" && link.getAttribute( "as" ) === "style" && !link.getAttribute( "data-loadcss" ) ){
+        // prevent rerunning on link
+        link.setAttribute( "data-loadcss", true );
+        // bind listeners to toggle media back
+        rp.bindMediaToggle( link );
+      }
+    }
+  };
+
+  // if unsupported, run the polyfill
+  if( !rp.support() ){
+    // run once at least
+    rp.poly();
+
+    // rerun poly on an interval until onload
+    var run = w.setInterval( rp.poly, 500 );
+    if( w.addEventListener ){
+      w.addEventListener( "load", function(){
+        rp.poly();
+        w.clearInterval( run );
+      } );
+    } else if( w.attachEvent ){
+      w.attachEvent( "onload", function(){
+        rp.poly();
+        w.clearInterval( run );
+      } );
+    }
+  }
+
+
+  // commonjs
+  if( typeof exports !== "undefined" ){
+    exports.loadCSS = loadCSS;
+  }
+  else {
+    w.loadCSS = loadCSS;
+  }
+}( typeof global !== "undefined" ? global : this ) );</script><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js" defer></script><script src="/js/main.js?v=2018.7.9" defer></script><!-- fancybox--><link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" defer></script><!-- busuanzi--><script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script></head><body><section class="profile-close" id="cxo-profile"><div class="profile-avatar"><i class="fa fa-caret-left"></i><img src="/img/assets/060E.png"></div><!--.profile-saying
+  i.fa.fa-comment
+  .saying--><div class="cxo-profile-inner"><div class="profile-name">乌猿宅</div><div class="profile-signature">for me</div><div class="read-progress"></div></div></section><header id="cxo-intro" style="height: 70vh;background-image: url(/img/intro/Konachan.com.jpg);"><nav id="cxo-intro-nav"><section><div class="intro-nav-title"><a href="/">Mr.Wu's Blog</a></div><div class="intro-nav-label-box"><a href="/">Home</a><a href="/about/">About</a><a href="/archives/">Archives</a><a href="/tags/">Tags</a></div><i class="fa fa-bars intro-nav-menu"><div class="intro-nav-drop"><a href="/">Home</a><a href="/about/">About</a><a href="/archives/">Archives</a><a href="/tags/">Tags</a></div></i><div class="clear"></div></section></nav><h1 class="post-title">架构师学习3</h1><div class="post-intros"><div class="post-intro-meta"><span class="post-intro-time"><i class="post-intro-calendar fa fa-edit"></i><span>2018-06-17</span></span></div></div></header><article class="cxo-up" id="cxo-content-outer"><section id="cxo-content-inner"><article class="article-entry" id="post"><h3 id="常见高性能架构模式之存储和缓存"><a href="#常见高性能架构模式之存储和缓存" class="headerlink" title="常见高性能架构模式之存储和缓存"></a>常见高性能架构模式之存储和缓存</h3><h4 id="高性能数据库集群"><a href="#高性能数据库集群" class="headerlink" title="高性能数据库集群"></a>高性能数据库集群</h4><h4 id="1-读写分离"><a href="#1-读写分离" class="headerlink" title="1. 读写分离"></a>1. 读写分离</h4><p>读写分离的基本实现是：</p>
+<ul>
+<li>数据库服务器搭建主从集群，一主一从、一主多从都可以。</li>
+<li>数据库主机负责读写操作，从机只负责读操作。</li>
+<li>数据库主机通过复制将数据同步到从机，每台数据库服务器都存储了所有的业务数据。</li>
+<li>业务服务器将写操作发给数据库主机，将读操作发给数据库从机。</li>
+</ul>
+<p>读写分离的实现逻辑并不复杂，但有两个细节点将引入设计复杂度：<strong>主从复制延迟</strong>和<strong>分配机制</strong></p>
+<p>解决主从复制延迟有几种常见的方法：</p>
+<ol>
+<li>写操作后的读操作指定发给数据库主服务器</li>
+<li>读从机失败后再读一次主机</li>
+<li>关键业务读写操作全部指向主机，非关键业务采用读写分离</li>
+</ol>
+<p>将读写操作区分开来，然后访问不同的数据库服务器，一般有两种方式：</p>
+<ol>
+<li>程序代码封装。程序代码封装指在代码中抽象一个数据访问层（所以有的文章也称这种方式为“中间层封装”），实现读写操作分离和数据库服务器连接的管理。</li>
+<li>中间件封装。中间件封装指的是独立一套系统出来，实现读写操作分离和数据库服务器连接的管理。中间件对业务服务器提供 SQL 兼容的协议，业务服务器无须自己进行读写分离。对于业务服务器来说，访问中间件和访问数据库没有区别，事实上在业务服务器看来，中间件就是一个数据库服务器。其基本架构是：中间件封装指的是独立一套系统出来，实现读写操作分离和数据库服务器连接的管理。中间件对业务服务器提供 SQL 兼容的协议，业务服务器无须自己进行读写分离。对于业务服务器来说，访问中间件和访问数据库没有区别，事实上在业务服务器看来，中间件就是一个数据库服务器。</li>
+</ol>
+<p>由于数据库中间件的复杂度要比程序代码封装高出一个数量级，一般情况下建议采用程序语言封装的方式，或者使用成熟的开源数据库中间件。如果是大公司，可以投入人力去实现数据库中间件，因为这个系统一旦做好，接入的业务系统越多，节省的程序开发投入就越多，价值也越大。</p>
+<h4 id="2-分库分表"><a href="#2-分库分表" class="headerlink" title="2. 分库分表"></a>2. 分库分表</h4><p><strong>业务分库指的是按照业务模块将数据分散到不同的数据库服务器。</strong>例如，一个简单的电商网站，包括用户、商品、订单三个业务模块，我们可以将用户数据、商品数据、订单数据分开放到三台不同的数据库服务器上，而不是将所有数据都放在一台数据库服务器上。<br>虽然业务分库能够分散存储和访问压力，但同时也带来了新的问题：</p>
+<ol>
+<li>join 操作问题。业务分库后，原本在同一个数据库中的表分散到不同数据库中，导致无法使用 SQL 的 join 查询。</li>
+<li>事务问题。原本在同一个数据库中不同的表可以在同一个事务中修改，业务分库后，表分散到不同的数据库中，无法通过事务统一修改。虽然数据库厂商提供了一些分布式事务的解决方案（例如，MySQL 的 XA），但性能实在太低，与高性能存储的目标是相违背的。</li>
+<li>成本问题。业务分库同时也带来了成本的代价，本来 1 台服务器搞定的事情，现在要 3 台，如果考虑备份，那就是 2 台变成了 6 台。</li>
+</ol>
+<p>基于上述原因，对于小公司初创业务，并不建议一开始就这样拆分，主要有几个原因：</p>
+<ul>
+<li>初创业务存在很大的不确定性，业务不一定能发展起来，业务开始的时候并没有真正的存储和访问压力，业务分库并不能为业务带来价值。</li>
+<li>业务分库后，表之间的 join 查询、数据库事务无法简单实现了。</li>
+<li>业务分库后，因为不同的数据要读写不同的数据库，代码中需要增加根据数据类型映射到不同数据库的逻辑，增加了工作量。而业务初创期间最重要的是快速实现、快速验证，业务分库会拖慢业务节奏。</li>
+</ul>
+<p>单表数据拆分有两种方式：<strong>垂直拆分</strong>和<strong>水平拆分</strong></p>
+<p>垂直切分，会把一个表按字段拆分成两个表；水平切分则是相当于减少表的数据量，将一部分数据移动到另一个拥有相同字段的表里。</p>
+<p>水平分表相比垂直分表，会引入更多的复杂性，主要表现在下面几个方面：</p>
+<ol>
+<li>路由。水平分表后，某条数据具体属于哪个切分后的子表，需要增加路由算法进行计算，这个算法会引入一定的复杂性。水平分表后，某条数据具体属于哪个切分后的子表，需要增加路由算法进行计算，这个算法会引入一定的复杂性。</li>
+<li>join 操作。水平分表后，数据分散在多个表中，如果需要与其他表进行 join 查询，需要在业务代码或者数据库中间件中进行多次 join 查询，然后将结果合并。</li>
+<li>count() 操作。水平分表后，虽然物理上数据分散到多个表中，但某些业务逻辑上还是会将这些表当作一个表来处理。例如，获取记录总数用于分页或者展示，水平分表前用一个 count() 就能完成的操作，在分表后就没那么简单了。</li>
+<li>order by 操作。水平分表后，数据分散到多个子表中，排序操作无法在数据库中完成，只能由业务代码或者数据库中间件分别查询每个子表中的数据，然后汇总进行排序。</li>
+</ol>
+<h4 id="高性能NoSQL"><a href="#高性能NoSQL" class="headerlink" title="高性能NoSQL"></a>高性能NoSQL</h4><h4 id="1-K-V-存储"><a href="#1-K-V-存储" class="headerlink" title="1. K-V 存储"></a>1. K-V 存储</h4><p>K-V 存储的全称是 Key-Value 存储，其中 Key 是数据的标识，和关系数据库中的主键含义一样，Value 就是具体的数据。</p>
+<h4 id="2-文档数据库"><a href="#2-文档数据库" class="headerlink" title="2. 文档数据库"></a>2. 文档数据库</h4><p>为了解决关系数据库 schema 带来的问题，文档数据库应运而生。文档数据库最大的特点就是 no-schema，可以存储和读取任意的数据。目前绝大部分文档数据库存储的数据格式是 JSON（或者 BSON），因为 JSON 数据是自描述的，无须在使用前定义字段，读取一个 JSON 中不存在的字段也不会导致 SQL 那样的语法错误。<br>文档数据库的 no-schema 特性，给业务开发带来了几个明显的优势。</p>
+<ol>
+<li>新增字段简单。业务上增加新的字段，无须再像关系数据库一样要先执行 DDL 语句修改表结构，程序代码直接读写即可。业务上增加新的字段，无须再像关系数据库一样要先执行 DDL 语句修改表结构，程序代码直接读写即可。</li>
+<li>历史数据不会出错。对于历史数据，即使没有新增的字段，也不会导致错误，只会返回空值，此时代码进行兼容处理即可。</li>
+<li>可以很容易存储复杂数据。JSON 是一种强大的描述语言，能够描述复杂的数据结构。</li>
+</ol>
+<p>文档数据库 no-schema 的特性带来的这些优势也是有代价的，最主要的代价就是不支持事务，另外一个缺点就是无法实现关系数据库的 join 操作。</p>
+<h4 id="3-列式数据库"><a href="#3-列式数据库" class="headerlink" title="3.列式数据库"></a>3.列式数据库</h4><p>顾名思义，列式数据库就是按照列来存储数据的数据库，与之对应的传统关系数据库被称为“行式数据库”，因为关系数据库是按照行来存储数据的。<br>关系数据库按照行式来存储数据，主要有以下几个优势：</p>
+<ul>
+<li>业务同时读取多个列时效率高，因为这些列都是按行存储在一起的，一次磁盘操作就能够把一行数据中的各个列都读取到内存中。</li>
+<li>能够一次性完成对一行中的多个列的写操作，保证了针对行数据写操作的原子性和一致性；否则如果采用列存储，可能会出现某次写操作，有的列成功了，有的列失败了，导致数据不一致。</li>
+</ul>
+<p>我们可以看到，行式存储的优势是在特定的业务场景下才能体现，如果不存在这样的业务场景，那么行式存储的优势也将不复存在，甚至成为劣势，典型的场景就是海量数据进行统计。</p>
+<h4 id="4-全文搜索引擎"><a href="#4-全文搜索引擎" class="headerlink" title="4.全文搜索引擎"></a>4.全文搜索引擎</h4><p>传统的关系型数据库通过索引来达到快速查询的目的，但是在全文搜索的业务场景下，索引也无能为力，主要体现在：</p>
+<ul>
+<li>全文搜索的条件可以随意排列组合，如果通过索引来满足，则索引的数量会非常多。</li>
+<li>全文搜索的模糊匹配方式，索引无法满足，只能用 like 查询，而 like 查询是整表扫描，效率非常低。</li>
+</ul>
+<h4 id="高性能缓存架构"><a href="#高性能缓存架构" class="headerlink" title="高性能缓存架构"></a>高性能缓存架构</h4><p>缓存虽然能够大大减轻存储系统的压力，但同时也给架构引入了更多复杂性。架构设计时如果没有针对缓存的复杂性进行处理，某些场景下甚至会导致整个系统崩溃。下面，来逐一分析缓存的架构设计要点。</p>
+<h4 id="1-缓存穿透"><a href="#1-缓存穿透" class="headerlink" title="1. 缓存穿透"></a>1. 缓存穿透</h4><p>是指缓存没有发挥作用，业务系统虽然去缓存查询数据，但缓存中没有数据，业务系统需要再次去存储系统查询数据。通常情况下有两种情况：</p>
+<ol>
+<li><p>存储数据不存在。这种情况的解决办法比较简单，如果查询存储系统的数据没有找到，则直接设置一个默认值（可以是空值，也可以是具体的值）存到缓存中，这样第二次读取缓存时就会获取到默认值，而不会继续访问存储系统。</p>
+</li>
+<li><p>缓存数据生成耗费大量时间或者资源。典型的就是电商的商品分页，假设我们在某个电商平台上选择“手机”这个类别查看，由于数据巨大，不能把所有数据都缓存起来，只能按照分页来进行缓存，由于难以预测用户到底会访问哪些分页，因此业务上最简单的就是每次点击分页的时候按分页计算和生成缓存。通常情况下这样实现是基本满足要求的，但是如果被竞争对手用爬虫来遍历的时候，系统性能就可能出现问题。<br>这种情况并没有太好的解决方案，因为爬虫会遍历所有的数据，而且什么时候来爬取也是不确定的，可能是每天都来，也可能是每周，也可能是一个月来一次，我们也不可能为了应对爬虫而将所有数据永久缓存。通常的应对方案要么就是识别爬虫然后禁止访问，但这可能会影响 SEO 和推广；要么就是做好监控，发现问题后及时处理，因为爬虫不是攻击，不会进行暴力破坏，对系统的影响是逐步的，监控发现问题后有时间进行处理。</p>
+</li>
+</ol>
+<h4 id="2-缓存雪崩"><a href="#2-缓存雪崩" class="headerlink" title="2.缓存雪崩"></a>2.缓存雪崩</h4><p>是指当缓存失效（过期）后引起系统性能急剧下降的情况。当缓存过期被清除后，业务系统需要重新生成缓存，因此需要再次访问存储系统，再次进行运算，这个处理步骤耗时几十毫秒甚至上百毫秒。而对于一个高并发的业务系统来说，几百毫秒内可能会接到几百上千个请求。由于旧的缓存已经被清除，新的缓存还未生成，并且处理这些请求的线程都不知道另外有一个线程正在生成缓存，因此所有的请求都会去重新生成缓存，都会去访问存储系统，从而对存储系统造成巨大的性能压力。这些压力又会拖慢整个系统，严重的会造成数据库宕机，从而形成一系列连锁反应，造成整个系统崩溃。</p>
+<p>缓存雪崩的常见解决方法有两种：</p>
+<ol>
+<li>更新锁。对缓存更新操作进行加锁保护，保证只有一个线程能够进行缓存更新，未能获取更新锁的线程要么等待锁释放后重新读取缓存，要么就返回空值或者默认值。<br>对于采用分布式集群的业务系统，由于存在几十上百台服务器，即使单台服务器只有一个线程更新缓存，但几十上百台服务器一起算下来也会有几十上百个线程同时来更新缓存，同样存在雪崩的问题。因此分布式集群的业务系统要实现更新锁机制，需要用到分布式锁，如 ZooKeeper。对于采用分布式集群的业务系统，由于存在几十上百台服务器，即使单台服务器只有一个线程更新缓存，但几十上百台服务器一起算下来也会有几十上百个线程同时来更新缓存，同样存在雪崩的问题。因此分布式集群的业务系统要实现更新锁机制，需要用到分布式锁，如 ZooKeeper。</li>
+<li>后台更新。由后台线程来更新缓存，而不是由业务线程来更新缓存，缓存本身的有效期设置为永久，后台线程定时更新缓存。</li>
+</ol>
+<p>其中后台定时机制需要考虑一种特殊的场景，当缓存系统内存不够时，会“踢掉”一些缓存数据，从缓存被“踢掉”到下一次定时更新缓存的这段时间内，业务线程读取缓存返回空值，而业务线程本身又不会去更新缓存，因此业务上看到的现象就是数据丢了。解决的方式有两种：</p>
+<ul>
+<li><p>后台线程除了定时更新缓存，还要频繁地去读取缓存（例如，1 秒或者 100 毫秒读取一次），如果发现缓存被“踢了”就立刻更新缓存，这种方式实现简单，但读取时间间隔不能设置太长，因为如果缓存被踢了，缓存读取间隔时间又太长，这段时间内业务访问都拿不到真正的数据而是一个空的缓存值，用户体验一般。</p>
+</li>
+<li><p>业务线程发现缓存失效后，通过消息队列发送一条消息通知后台线程更新缓存。可能会出现多个业务线程都发送了缓存更新消息，但其实对后台线程没有影响，后台线程收到消息后更新缓存前可以判断缓存是否存在，存在就不执行更新操作。这种方式实现依赖消息队列，复杂度会高一些，但缓存更新更及时，用户体验更好。</p>
+</li>
+</ul>
+<p>后台更新既适应单机多线程的场景，也适合分布式集群的场景，相比更新锁机制要简单一些。</p>
+<p>后台更新机制还适合业务刚上线的时候进行缓存预热。缓存预热指系统上线后，将相关的缓存数据直接加载到缓存系统，而不是等待用户访问才来触发缓存加载。</p>
+<h4 id="3-缓存热点"><a href="#3-缓存热点" class="headerlink" title="3. 缓存热点"></a>3. 缓存热点</h4><p>虽然缓存系统本身的性能比较高，但对于一些特别热点的数据，如果大部分甚至所有的业务请求都命中同一份缓存数据，则这份数据所在的缓存服务器的压力也很大。</p>
+<p>缓存热点的解决方案就是复制多份缓存副本，将请求分散到多个缓存服务器上，减轻缓存热点导致的单台缓存服务器压力。</p>
+<p>缓存副本设计有一个细节需要注意，就是不同的缓存副本不要设置统一的过期时间，否则就会出现所有缓存副本同时生成同时失效的情况，从而引发缓存雪崩效应。正确的做法是设定一个过期时间范围，不同的缓存副本的过期时间是指定范围内的随机值。</p>
+</article><!-- lincense--><div class="license-wrapper"><p> <span>Author:  </span><a href="http://yoursite.com">John Doe</a></p><p> <span>Link:  </span><a href="http://yoursite.com/2018/06/17/架构师学习3/">http://yoursite.com/2018/06/17/架构师学习3/</a></p><p> <span>Copyright:  </span><span>All articles in this blog are licensed under <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/3.0">CC BY-NC-SA 3.0</a> unless stating additionally.</span></p></div><div class="post-paginator"><a class="nextSlogan" href="/2018/05/26/架构师学习2/" title="架构师学习2"><span>NextPost ></span><br><span class="nextTitle">架构师学习2</span></a><div class="clear"></div></div><div id="comment"></div></section></article><footer id="cxo-footer-outer"><div id="cxo-footer-inner"><p class="footer-container"><span>Site by </span><a href="http://hexo.io"><span>Hexo</span></a><span> | theme </span><a href="https://github.com/Longlongyu/hexo-theme-Cxo"><span>Cxo</span></a></p><i class="fa fa-user"> </i><span id="busuanzi_value_site_uv"></span><span> | </span><i class="fa fa-eye"> </i><span id="busuanzi_value_site_pv"></span></div></footer><!-- catelog--><div class="toc-wrapper" style="top: 70vh;"><div class="toc-catalog"><i class="fa fa-list"> </i><span>CATALOG</span></div><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#常见高性能架构模式之存储和缓存"><span class="toc-number">1.</span> <span class="toc-text">常见高性能架构模式之存储和缓存</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#高性能数据库集群"><span class="toc-number">1.1.</span> <span class="toc-text">高性能数据库集群</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-读写分离"><span class="toc-number">1.2.</span> <span class="toc-text">1. 读写分离</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-分库分表"><span class="toc-number">1.3.</span> <span class="toc-text">2. 分库分表</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#高性能NoSQL"><span class="toc-number">1.4.</span> <span class="toc-text">高性能NoSQL</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-K-V-存储"><span class="toc-number">1.5.</span> <span class="toc-text">1. K-V 存储</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-文档数据库"><span class="toc-number">1.6.</span> <span class="toc-text">2. 文档数据库</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-列式数据库"><span class="toc-number">1.7.</span> <span class="toc-text">3.列式数据库</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-全文搜索引擎"><span class="toc-number">1.8.</span> <span class="toc-text">4.全文搜索引擎</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#高性能缓存架构"><span class="toc-number">1.9.</span> <span class="toc-text">高性能缓存架构</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-缓存穿透"><span class="toc-number">1.10.</span> <span class="toc-text">1. 缓存穿透</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-缓存雪崩"><span class="toc-number">1.11.</span> <span class="toc-text">2.缓存雪崩</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-缓存热点"><span class="toc-number">1.12.</span> <span class="toc-text">3. 缓存热点</span></a></li></ol></li></ol></div><!-- top--><i class="fa fa-arrow-up close" id="go-up" aria-hidden="true"></i></body></html>

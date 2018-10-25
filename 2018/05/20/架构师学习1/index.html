@@ -1,0 +1,118 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"><meta name="author" content="John Doe"><meta name="renderer" content="webkit"><meta name="copyright" content="John Doe"><meta name="keywords" content="Hexo"><meta name="description" content="null"><meta name="Cache-Control" content="no-cache"><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><title>架构师学习1 · Mr.Wu's Blog</title><link rel="stylesheet" href="/css/style.css?v=2018.7.9"><link rel="stylesheet" href="/css/animation.css?v=2018.7.9"><link rel="icon" href="/img/assets/favicon.ico"><link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css?version=1.5.6"><!-- scripts--><script>(function( w ){
+  "use strict";
+  // rel=preload support test
+  if( !w.loadCSS ){
+    w.loadCSS = function(){};
+  }
+  // define on the loadCSS obj
+  var rp = loadCSS.relpreload = {};
+  // rel=preload feature support test
+  // runs once and returns a function for compat purposes
+  rp.support = (function(){
+    var ret;
+    try {
+      ret = w.document.createElement( "link" ).relList.supports( "preload" );
+    } catch (e) {
+      ret = false;
+    }
+    return function(){
+      return ret;
+    };
+  })();
+
+  // if preload isn't supported, get an asynchronous load by using a non-matching media attribute
+  // then change that media back to its intended value on load
+  rp.bindMediaToggle = function( link ){
+    // remember existing media attr for ultimate state, or default to 'all'
+    var finalMedia = link.media || "all";
+
+    function enableStylesheet(){
+      link.media = finalMedia;
+    }
+
+    // bind load handlers to enable media
+    if( link.addEventListener ){
+      link.addEventListener( "load", enableStylesheet );
+    } else if( link.attachEvent ){
+      link.attachEvent( "onload", enableStylesheet );
+    }
+
+    // Set rel and non-applicable media type to start an async request
+    // note: timeout allows this to happen async to let rendering continue in IE
+    setTimeout(function(){
+      link.rel = "stylesheet";
+      link.media = "only x";
+    });
+    // also enable media after 3 seconds,
+    // which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
+    setTimeout( enableStylesheet, 3000 );
+  };
+
+  // loop through link elements in DOM
+  rp.poly = function(){
+    // double check this to prevent external calls from running
+    if( rp.support() ){
+      return;
+    }
+    var links = w.document.getElementsByTagName( "link" );
+    for( var i = 0; i < links.length; i++ ){
+      var link = links[ i ];
+      // qualify links to those with rel=preload and as=style attrs
+      if( link.rel === "preload" && link.getAttribute( "as" ) === "style" && !link.getAttribute( "data-loadcss" ) ){
+        // prevent rerunning on link
+        link.setAttribute( "data-loadcss", true );
+        // bind listeners to toggle media back
+        rp.bindMediaToggle( link );
+      }
+    }
+  };
+
+  // if unsupported, run the polyfill
+  if( !rp.support() ){
+    // run once at least
+    rp.poly();
+
+    // rerun poly on an interval until onload
+    var run = w.setInterval( rp.poly, 500 );
+    if( w.addEventListener ){
+      w.addEventListener( "load", function(){
+        rp.poly();
+        w.clearInterval( run );
+      } );
+    } else if( w.attachEvent ){
+      w.attachEvent( "onload", function(){
+        rp.poly();
+        w.clearInterval( run );
+      } );
+    }
+  }
+
+
+  // commonjs
+  if( typeof exports !== "undefined" ){
+    exports.loadCSS = loadCSS;
+  }
+  else {
+    w.loadCSS = loadCSS;
+  }
+}( typeof global !== "undefined" ? global : this ) );</script><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js" defer></script><script src="/js/main.js?v=2018.7.9" defer></script><!-- fancybox--><link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" defer></script><!-- busuanzi--><script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script></head><body><section class="profile-close" id="cxo-profile"><div class="profile-avatar"><i class="fa fa-caret-left"></i><img src="/img/assets/060E.png"></div><!--.profile-saying
+  i.fa.fa-comment
+  .saying--><div class="cxo-profile-inner"><div class="profile-name">乌猿宅</div><div class="profile-signature">for me</div><div class="read-progress"></div></div></section><header id="cxo-intro" style="height: 70vh;background-image: url(/img/intro/Konachan.com.jpg);"><nav id="cxo-intro-nav"><section><div class="intro-nav-title"><a href="/">Mr.Wu's Blog</a></div><div class="intro-nav-label-box"><a href="/">Home</a><a href="/about/">About</a><a href="/archives/">Archives</a><a href="/tags/">Tags</a></div><i class="fa fa-bars intro-nav-menu"><div class="intro-nav-drop"><a href="/">Home</a><a href="/about/">About</a><a href="/archives/">Archives</a><a href="/tags/">Tags</a></div></i><div class="clear"></div></section></nav><h1 class="post-title">架构师学习1</h1><div class="post-intros"><div class="post-intro-meta"><span class="post-intro-time"><i class="post-intro-calendar fa fa-edit"></i><span>2018-05-20</span></span></div></div></header><article class="cxo-up" id="cxo-content-outer"><section id="cxo-content-inner"><article class="article-entry" id="post"><h3 id="架构师学习1"><a href="#架构师学习1" class="headerlink" title="架构师学习1"></a>架构师学习1</h3><h4 id="架构是什么"><a href="#架构是什么" class="headerlink" title="架构是什么?"></a>架构是什么?</h4><blockquote>
+<p>软件架构指软件系统的顶层结构。</p>
+</blockquote>
+<p>这个定义看似很简单，但包含的信息很丰富，基本上把系统、子系统、模块、组件、架构等概念都串起来了。</p>
+<p>系统与子系统：系统是由一系列有关联，按特定规则组成的个体，并且产生新的能力，而系统与子系统则是观察的交角度不同。</p>
+<p>模块与组件：模块是从逻辑角度去看待，而组件是从物理角度去看待。</p>
+<p>框架与架构：框架是规范也是约束，可以理解为封闭性的话题，定义好，让别人如何去使用，而架构是一种结构，是一种开放性的话题，如何去设计组织架构，如何让架构更具有拓展性，减少沟通错误成本框架与架构：框架是规范也是约束，可以理解为封闭性的话题，定义好，让别人如何去使用，而架构是一种结构，是一种开放性的话题，如何去设计组织架构，如何让架构更具有拓展性，减少沟通错误成本。</p>
+<h4 id="架构师要做什么"><a href="#架构师要做什么" class="headerlink" title="架构师要做什么?"></a>架构师要做什么?</h4><blockquote>
+<p>架构师要设计出能够解决软件系统复杂度带来的问题的架构。</p>
+</blockquote>
+<p>架构即(重要)决策，是在一个有约束的盒子里去求解或接近最合适的解。这个有约束的盒子是团队经验、成本、资源、进度、业务所处阶段等所编织、掺杂在一起的综合体(人，财，物，时间，事情等)。架构无优劣，但是存在恰当的架构用在合适的软件系统中，而这些就是决策的结果。</p>
+<h4 id="复杂度有哪些"><a href="#复杂度有哪些" class="headerlink" title="复杂度有哪些?"></a>复杂度有哪些?</h4><p><img src="https://res.cloudinary.com/woo502/image/upload/v1540047428/blog/%E7%B3%BB%E7%BB%9F%E5%A4%8D%E6%9D%82%E5%BA%A6%E6%9D%A5%E6%BA%90.png" alt="enter image description here"></p>
+<h4 id="架构设计三原则"><a href="#架构设计三原则" class="headerlink" title="架构设计三原则"></a>架构设计三原则</h4><h5 id="合适原则"><a href="#合适原则" class="headerlink" title="合适原则"></a>合适原则</h5><p>架构无优劣，但存合适性。“汝之蜜糖，吾之砒霜”；架构一定要匹配企业所在的业务阶段；不要面向简历去设计架构，高大上的架构不等于适用；削足适履与打肿充胖都不符合合适原则；所谓合适，一定要匹配业务所处阶段，能够合理地将资源整合在一起并发挥出最大功效，并能够快速落地。</p>
+<h5 id="简单原则"><a href="#简单原则" class="headerlink" title="简单原则"></a>简单原则</h5><p>“我没有时间写一封短信，所以只好写一封长信”。其实，简单比复杂更加困难。面对系统结构、业务逻辑和复杂性，我们可以编写出复杂的系统，但在软件领域，复杂代表的是“问题”。架构设计时如果简单的方案和复杂的方案都可以满足需求，最好选择简单的方案。但是，事实上，当软件系统变得太复杂后，就会有人换一个思路进行重构、升级，将它重新变得简单，这也是软件开发的大趋势。 简单原则是一个朴素且伟大的原则，Google的MapReduce系统就采用了分而治之的思想，而背后就是将复杂问题转化为简单问题的典型案例。</p>
+<h5 id="演化原则"><a href="#演化原则" class="headerlink" title="演化原则"></a>演化原则</h5><p>大到人类社会、自然生物，小到一个细胞，似乎都遵循这一普世原则，软件架构也不例外。业务在发展、技术在创新、外部环境在变化，这一切都是在告诫架构师不要贪大求全，或者盲目照搬大公司的做法。应该认真分析当前业务的特点，明确业务面临的主要问题，设计合理的架构，快速落地以满足业务需要，然后在运行过程中不断完善架构，不断随着业务演化架构。怀胎需要十月，早一月或晚一月都很危险。</p>
+<blockquote>
+<p>合适优于先进&gt;演化优于一步到位&gt;简单优于复杂合适优于先进&gt;演化优于一步到位&gt;简单优于复杂</p>
+</blockquote>
+</article><!-- lincense--><div class="license-wrapper"><p> <span>Author:  </span><a href="http://yoursite.com">John Doe</a></p><p> <span>Link:  </span><a href="http://yoursite.com/2018/05/20/架构师学习1/">http://yoursite.com/2018/05/20/架构师学习1/</a></p><p> <span>Copyright:  </span><span>All articles in this blog are licensed under <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/3.0">CC BY-NC-SA 3.0</a> unless stating additionally.</span></p></div><div class="post-paginator"><a class="prevSlogan" href="/2018/05/23/常见框架性能数据/" title="常见框架性能数据"><span>< PreviousPost</span><br><span class="prevTitle">常见框架性能数据</span></a><a class="nextSlogan" href="/2017/11/05/转-swagger完整教程/" title="[转]swagger完整教程"><span>NextPost ></span><br><span class="nextTitle">[转]swagger完整教程</span></a><div class="clear"></div></div><div id="comment"></div></section></article><footer id="cxo-footer-outer"><div id="cxo-footer-inner"><p class="footer-container"><span>Site by </span><a href="http://hexo.io"><span>Hexo</span></a><span> | theme </span><a href="https://github.com/Longlongyu/hexo-theme-Cxo"><span>Cxo</span></a></p><i class="fa fa-user"> </i><span id="busuanzi_value_site_uv"></span><span> | </span><i class="fa fa-eye"> </i><span id="busuanzi_value_site_pv"></span></div></footer><!-- catelog--><div class="toc-wrapper" style="top: 70vh;"><div class="toc-catalog"><i class="fa fa-list"> </i><span>CATALOG</span></div><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#架构师学习1"><span class="toc-number">1.</span> <span class="toc-text">架构师学习1</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#架构是什么"><span class="toc-number">1.1.</span> <span class="toc-text">架构是什么?</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#架构师要做什么"><span class="toc-number">1.2.</span> <span class="toc-text">架构师要做什么?</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#复杂度有哪些"><span class="toc-number">1.3.</span> <span class="toc-text">复杂度有哪些?</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#架构设计三原则"><span class="toc-number">1.4.</span> <span class="toc-text">架构设计三原则</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#合适原则"><span class="toc-number">1.4.1.</span> <span class="toc-text">合适原则</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#简单原则"><span class="toc-number">1.4.2.</span> <span class="toc-text">简单原则</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#演化原则"><span class="toc-number">1.4.3.</span> <span class="toc-text">演化原则</span></a></li></ol></li></ol></li></ol></div><!-- top--><i class="fa fa-arrow-up close" id="go-up" aria-hidden="true"></i></body></html>
