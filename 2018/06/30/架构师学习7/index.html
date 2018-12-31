@@ -1,0 +1,167 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"><meta name="author" content="乌猿宅"><meta name="renderer" content="webkit"><meta name="copyright" content="乌猿宅"><meta name="keywords" content="Hexo"><meta name="description" content="null"><meta name="Cache-Control" content="no-cache"><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><title>架构师学习7 · Mr.Wu's Blog</title><link rel="stylesheet" href="/css/style.css?v=2018.7.9"><link rel="stylesheet" href="/css/animation.css?v=2018.7.9"><link rel="icon" href="/img/assets/favicon.ico"><link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css?version=1.5.6"><!-- scripts--><script>(function( w ){
+  "use strict";
+  // rel=preload support test
+  if( !w.loadCSS ){
+    w.loadCSS = function(){};
+  }
+  // define on the loadCSS obj
+  var rp = loadCSS.relpreload = {};
+  // rel=preload feature support test
+  // runs once and returns a function for compat purposes
+  rp.support = (function(){
+    var ret;
+    try {
+      ret = w.document.createElement( "link" ).relList.supports( "preload" );
+    } catch (e) {
+      ret = false;
+    }
+    return function(){
+      return ret;
+    };
+  })();
+
+  // if preload isn't supported, get an asynchronous load by using a non-matching media attribute
+  // then change that media back to its intended value on load
+  rp.bindMediaToggle = function( link ){
+    // remember existing media attr for ultimate state, or default to 'all'
+    var finalMedia = link.media || "all";
+
+    function enableStylesheet(){
+      link.media = finalMedia;
+    }
+
+    // bind load handlers to enable media
+    if( link.addEventListener ){
+      link.addEventListener( "load", enableStylesheet );
+    } else if( link.attachEvent ){
+      link.attachEvent( "onload", enableStylesheet );
+    }
+
+    // Set rel and non-applicable media type to start an async request
+    // note: timeout allows this to happen async to let rendering continue in IE
+    setTimeout(function(){
+      link.rel = "stylesheet";
+      link.media = "only x";
+    });
+    // also enable media after 3 seconds,
+    // which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
+    setTimeout( enableStylesheet, 3000 );
+  };
+
+  // loop through link elements in DOM
+  rp.poly = function(){
+    // double check this to prevent external calls from running
+    if( rp.support() ){
+      return;
+    }
+    var links = w.document.getElementsByTagName( "link" );
+    for( var i = 0; i < links.length; i++ ){
+      var link = links[ i ];
+      // qualify links to those with rel=preload and as=style attrs
+      if( link.rel === "preload" && link.getAttribute( "as" ) === "style" && !link.getAttribute( "data-loadcss" ) ){
+        // prevent rerunning on link
+        link.setAttribute( "data-loadcss", true );
+        // bind listeners to toggle media back
+        rp.bindMediaToggle( link );
+      }
+    }
+  };
+
+  // if unsupported, run the polyfill
+  if( !rp.support() ){
+    // run once at least
+    rp.poly();
+
+    // rerun poly on an interval until onload
+    var run = w.setInterval( rp.poly, 500 );
+    if( w.addEventListener ){
+      w.addEventListener( "load", function(){
+        rp.poly();
+        w.clearInterval( run );
+      } );
+    } else if( w.attachEvent ){
+      w.attachEvent( "onload", function(){
+        rp.poly();
+        w.clearInterval( run );
+      } );
+    }
+  }
+
+
+  // commonjs
+  if( typeof exports !== "undefined" ){
+    exports.loadCSS = loadCSS;
+  }
+  else {
+    w.loadCSS = loadCSS;
+  }
+}( typeof global !== "undefined" ? global : this ) );</script><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js" defer></script><script src="/js/main.js?v=2018.7.9" defer></script><!-- fancybox--><link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" defer></script><!-- busuanzi--><script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script></head><body><section class="profile-close" id="cxo-profile"><div class="profile-avatar"><i class="fa fa-caret-left"></i><img src="/img/assets/060E.png"></div><!--.profile-saying
+  i.fa.fa-comment
+  .saying--><div class="cxo-profile-inner"><div class="profile-name">乌猿宅</div><div class="profile-signature">for me</div><div class="read-progress"></div></div></section><header id="cxo-intro" style="height: 70vh;background-image: url(/img/intro/Konachan.com.jpg);"><nav id="cxo-intro-nav"><section><div class="intro-nav-title"><a href="/">Mr.Wu's Blog</a></div><div class="intro-nav-label-box"><a href="/">Home</a><a href="/about/">About</a><a href="/archives/">Archives</a><a href="/tags/">Tags</a></div><i class="fa fa-bars intro-nav-menu"><div class="intro-nav-drop"><a href="/">Home</a><a href="/about/">About</a><a href="/archives/">Archives</a><a href="/tags/">Tags</a></div></i><div class="clear"></div></section></nav><h1 class="post-title">架构师学习7</h1><div class="post-intros"><div class="post-intro-meta"><span class="post-intro-time"><i class="post-intro-calendar fa fa-edit"></i><span>2018-12-31</span></span></div></div></header><article class="cxo-up" id="cxo-content-outer"><section id="cxo-content-inner"><article class="article-entry" id="post"><h3 id="高可用存储架构-双机架构"><a href="#高可用存储架构-双机架构" class="headerlink" title="高可用存储架构: 双机架构"></a>高可用存储架构: 双机架构</h3><p>常见的高可用存储架构有主备、主从、主主、集群、分区，每一种又可以根据业务的需求进行一些特殊的定制化功能，由此衍生出更多的变种。</p>
+<h4 id="主备复制"><a href="#主备复制" class="headerlink" title="主备复制"></a>主备复制</h4><p>主备复制是最常见也是最简单的一种存储高可用方案，几乎所有的存储系统都提供了主备复制的功能，例如 MySQL、Redis、MongoDB 等。</p>
+<p>1.基本实现</p>
+<p><img src="https://res.cloudinary.com/woo502/image/upload/v1546239619/blog/26bd5774cb1537abc7f7d2c7f947a337.jpg" alt="enter image description here"></p>
+<p>2.优缺点分析</p>
+<p>主备复制架构的优点就是简单，表现有：</p>
+<ul>
+<li>对于客户端来说，不需要感知备机的存在，即使灾难恢复后，原来的备机被人工修改为主机后，对于客户端来说，只是认为主机的地址换了而已，无须知道是原来的备机升级为主机。</li>
+<li>对于主机和备机来说，双方只需要进行数据复制即可，无须进行状态判断和主备切换这类复杂的操作。</li>
+</ul>
+<p>主备复制架构的缺点主要有：</p>
+<ul>
+<li>备机仅仅只为备份，并没有提供读写操作，硬件成本上有浪费。</li>
+<li>故障后需要人工干预，无法自动恢复。人工处理的效率是很低的，可能打电话找到能够操作的人就耗费了 10 分钟，甚至如果是深更半夜，出了故障都没人知道。人工在执行恢复操作的过程中也容易出错，因为这类操作并不常见，可能 1 年就 2、3 次，实际操作的时候很可能遇到各种意想不到的问题。</li>
+</ul>
+<p>综合主备复制架构的优缺点，内部的后台管理系统使用主备复制架构的情况会比较多，例如学生管理系统、员工管理系统、假期管理系统等，因为这类系统的数据变更频率低，即使在某些场景下丢失数据，也可以通过人工的方式补全。</p>
+<h4 id="主从复制"><a href="#主从复制" class="headerlink" title="主从复制"></a>主从复制</h4><p>1.基本实现<br><img src="https://res.cloudinary.com/woo502/image/upload/v1546239931/blog/0f73b06fc786410679c83e2479bd0d53.jpg" alt="enter image description here"></p>
+<p>2.优缺点分析<br>主从复制与主备复制相比，优点有：</p>
+<ul>
+<li>主从复制在主机故障时，读操作相关的业务可以继续运行。</li>
+<li>主从复制架构的从机提供读操作，发挥了硬件的性能。</li>
+</ul>
+<p>缺点有：</p>
+<ul>
+<li>主从复制架构中，客户端需要感知主从关系，并将不同的操作发给不同的机器进行处理，复杂度比主备复制要高。</li>
+<li>主从复制架构中，从机提供读业务，如果主从复制延迟比较大，业务会因为数据不一致出现问题。</li>
+<li>故障时需要人工干预。</li>
+</ul>
+<p>综合主从复制的优缺点，一般情况下，写少读多的业务使用主从复制的存储架构比较多。例如，论坛、BBS、新闻网站这类业务，此类业务的读操作数量是写操作数量的 10 倍甚至 100 倍以上。</p>
+<p>####双机切换</p>
+<p>1.设计关键<br>主备复制和主从复制方案存在两个共性的问题：</p>
+<ul>
+<li>主机故障后，无法进行写操作。</li>
+<li>如果主机无法恢复，需要人工指定新的主机角色。</li>
+</ul>
+<p>要实现一个完善的切换方案，必须考虑这几个关键的设计点：</p>
+<ul>
+<li>主备间状态判断</li>
+</ul>
+<p>主要包括两方面：状态传递的渠道，以及状态检测的内容。<br><strong>状态传递的渠道</strong>：是相互间互相连接，还是第三方仲裁？<br><strong>状态检测的内容</strong>：例如机器是否掉电、进程是否存在、响应是否缓慢等。</p>
+<ul>
+<li>切换决策</li>
+</ul>
+<p>主要包括几方面：切换时机、切换策略、自动程度。</p>
+<p><strong>切换时机</strong>：什么情况下备机应该升级为主机？是机器掉电后备机才升级，还是主机上的进程不存在就升级，还是主机响应时间超过 2 秒就升级，还是 3 分钟内主机连续重启 3 次就升级等。<br><strong>切换策略</strong>：原来的主机故障恢复后，要再次切换，确保原来的主机继续做主机，还是原来的主机故障恢复后自动成为新的备机？<br><strong>自动程度</strong>：切换是完全自动的，还是半自动的？例如，系统判断当前需要切换，但需要人工做最终的确认操作（例如，单击一下“切换”按钮）。</p>
+<ul>
+<li>数据冲突解决</li>
+</ul>
+<p>当原有故障的主机恢复后，新旧主机之间可能存在数据冲突。例如，用户在旧主机上新增了一条 ID 为 100 的数据，这个数据还没有复制到旧的备机，此时发生了切换，旧的备机升级为新的主机，用户又在新的主机上新增了一条 ID 为 100 的数据，当旧的故障主机恢复后，这两条 ID 都为 100 的数据，应该怎么处理？</p>
+<p>2.常见架构</p>
+<p>#####互连式</p>
+<p><img src="https://res.cloudinary.com/woo502/image/upload/v1546240412/blog/d5b87f8cc1e955279878cc3fc4b0850a.png" alt="enter image description here"></p>
+<p>#####中介式<br><img src="https://res.cloudinary.com/woo502/image/upload/v1546240454/blog/99af5ce1aefc18253839152755dedb66.png" alt="enter image description here"></p>
+<p>#####模拟式<br><img src="https://res.cloudinary.com/woo502/image/upload/v1546240496/blog/20c26a952fcafd5a48a6220a77ff5b1b.png" alt="enter image description here"></p>
+<p>####主主复制<br>主主复制指的是两台机器都是主机，互相将数据复制给对方，客户端可以任意挑选其中一台机器进行读写操作，下面是基本架构图。</p>
+<p><img src="https://res.cloudinary.com/woo502/image/upload/v1546240621/blog/01ef030e85fe4315e7876f95ced085fd.png" alt="enter image description here"></p>
+<p>相比主备切换架构，主主复制架构具有如下特点：</p>
+<ul>
+<li>两台都是主机，不存在切换的概念。</li>
+<li>客户端无须区分不同角色的主机，随便将读写操作发送给哪台主机都可以。</li>
+</ul>
+<p>从上面的描述来看，主主复制架构从总体上来看要简单很多，无须状态信息传递，也无须状态决策和状态切换。然而事实上主主复制架构也并不简单，而是有其独特的复杂性，具体表现在：如果采取主主复制架构，必须保证数据能够双向复制，而很多数据是不能双向复制的。例如：</p>
+<ul>
+<li>用户注册后生成的用户 ID，如果按照数字增长，那就不能双向复制，否则就会出现 X 用户在主机 A 注册，分配的用户 ID 是 100，同时 Y 用户在主机 B 注册，分配的用户 ID 也是 100，这就出现了冲突。</li>
+<li>库存不能双向复制。例如，一件商品库存 100 件，主机 A 上减了 1 件变成 99，主机 B 上减了 2 件变成 98，然后主机 A 将库存 99 复制到主机 B，主机 B 原有的库存 98 被覆盖，变成了 99，而实际上此时真正的库存是 97。类似的还有余额数据。</li>
+</ul>
+<p>因此，主主复制架构对数据的设计有严格的要求，一般适合于那些临时性、可丢失、可覆盖的数据场景。例如，用户登录产生的 session 数据（可以重新登录生成）、用户行为的日志数据（可以丢失）、论坛的草稿数据（可以丢失）等。</p>
+</article><!-- lincense--><div class="license-wrapper"><p> <span>Author:  </span><a href="https://woo502.github.io">乌猿宅</a></p><p> <span>Link:  </span><a href="https://woo502.github.io/2018/06/30/架构师学习7/">https://woo502.github.io/2018/06/30/架构师学习7/</a></p><p> <span>Copyright:  </span><span>All articles in this blog are licensed under <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/3.0">CC BY-NC-SA 3.0</a> unless stating additionally.</span></p></div><div class="post-paginator"><a class="nextSlogan" href="/2018/06/23/架构师学习6/" title="架构师学习6"><span>NextPost ></span><br><span class="nextTitle">架构师学习6</span></a><div class="clear"></div></div><div id="comment"></div></section></article><footer id="cxo-footer-outer"><div id="cxo-footer-inner"><p class="footer-container"><span>Site by </span><a href="http://hexo.io"><span>Hexo</span></a><span> | theme </span><a href="https://github.com/Longlongyu/hexo-theme-Cxo"><span>Cxo</span></a></p><i class="fa fa-user"> </i><span id="busuanzi_value_site_uv"></span><span> | </span><i class="fa fa-eye"> </i><span id="busuanzi_value_site_pv"></span></div></footer><!-- catelog--><div class="toc-wrapper" style="top: 70vh;"><div class="toc-catalog"><i class="fa fa-list"> </i><span>CATALOG</span></div><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#高可用存储架构-双机架构"><span class="toc-number">1.</span> <span class="toc-text">高可用存储架构: 双机架构</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#主备复制"><span class="toc-number">1.1.</span> <span class="toc-text">主备复制</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#主从复制"><span class="toc-number">1.2.</span> <span class="toc-text">主从复制</span></a></li></ol></li></ol></div><!-- top--><i class="fa fa-arrow-up close" id="go-up" aria-hidden="true"></i></body></html>
