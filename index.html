@@ -112,7 +112,15 @@
 对于客户端来说，不需要感知备机的存在，即使灾难恢复后，原来的备机被人工修改为主机后，对于客户端来说，只是认为主机的地址换了而已，无须知道是原来的备机升级为主机。
 对于主机和备机来说，双方只需要进行数据复制即可，无须进行状态判 ...</div><div class="read-more"><a class="more" href="/2018/06/30/架构师学习7/#more">ReadMore</a></div><hr></div><div class="recent-post-item"><div class="post-title"><a href="/2018/06/28/架构师学习9/">架构师学习9</a></div><div class="post-time"><i class="fa fa-table"></i><time datetime="2018-06-28T12:24:49.000Z">2018-06-28</time><i class="fa fa-edit"></i><time datetime="2018-06-28T12:24:49.000Z">2018-06-28</time></div><div class="recent-post-content">如何设计计算高可用架构？计算高可用的主要设计目标是当出现部分硬件损坏时，计算任务能够继续正常运行。因此计算高可用的本质是通过冗余来规避部分故障的风险，单台服务器是无论如何都达不到这个目标的。所以计算高可用的设计思想很简单：通过增加更多服务器来达到计算高可用。计算高可用架构的设计复杂度主要体现在任务管理方面，即当任务在某台服务器上执行失败后，如何将任务重新分配到新的服务器进行执行。因此，计算高可用架构设计的关键点有下面两点。
 
-哪些服务器可以执行任务第一种方式和计算高性能中的集群类似，每个服务器都可以执行任务。例如，常见的访问网站的某个页面。第二种方式和存储高可用中的集群类似，只有特定服务器（通 ...</div><div class="read-more"><a class="more" href="/2018/06/28/架构师学习9/#more">ReadMore</a></div><hr></div><div class="recent-post-item"><div class="post-title"><a href="/2018/06/23/架构师学习6/">架构师学习6</a></div><div class="post-time"><i class="fa fa-table"></i><time datetime="2018-06-23T06:08:32.000Z">2018-06-23</time><i class="fa fa-edit"></i><time datetime="2018-06-23T06:08:32.000Z">2018-06-23</time></div><div class="recent-post-content">CAP理论在一个分布式系统（指互相连接并共享数据的节点的集合）中，当涉及读写操作时，只能保证一致性（Consistence）、可用性（Availability）、分区容错性（Partition Tolerance）三者中的两个，另外一个必须被牺牲。
+哪些服务器可以执行任务第一种方式和计算高性能中的集群类似，每个服务器都可以执行任务。例如，常见的访问网站的某个页面。第二种方式和存储高可用中的集群类似，只有特定服务器（通 ...</div><div class="read-more"><a class="more" href="/2018/06/28/架构师学习9/#more">ReadMore</a></div><hr></div><div class="recent-post-item"><div class="post-title"><a href="/2018/06/25/docker-win10-下环境搭建/">docker win10 下环境搭建</a></div><div class="post-time"><i class="fa fa-table"></i><time datetime="2018-06-25T13:37:49.000Z">2018-06-25</time><i class="fa fa-edit"></i><time datetime="2018-06-25T13:37:49.000Z">2018-06-25</time></div><div class="recent-post-content">在windows系统上使用docker由两种方式,  win10一下系统是借由docker toolbox 以虚拟机的方式使用, 而win10(专业版)开始则可以直接安装docker。
+准备
+下载docker安装文件: Docker_Windows_Installer.exe
+打开windows 10 hyper-v 功能: 控制面板-程序-启用或关闭windows 程序
+
+安装双击exe文件开始安装, 同意后直接开始安装
+启动启动docker后右下角会多一个小图标
+使用docker启动成功之后就可以在命令行中使用docker命令了
+12docker pull hello-worlddocke ...</div><div class="read-more"><a class="more" href="/2018/06/25/docker-win10-下环境搭建/#more">ReadMore</a></div><hr></div><div class="recent-post-item"><div class="post-title"><a href="/2018/06/23/架构师学习6/">架构师学习6</a></div><div class="post-time"><i class="fa fa-table"></i><time datetime="2018-06-23T06:08:32.000Z">2018-06-23</time><i class="fa fa-edit"></i><time datetime="2018-06-23T06:08:32.000Z">2018-06-23</time></div><div class="recent-post-content">CAP理论在一个分布式系统（指互相连接并共享数据的节点的集合）中，当涉及读写操作时，只能保证一致性（Consistence）、可用性（Availability）、分区容错性（Partition Tolerance）三者中的两个，另外一个必须被牺牲。
 #####1.  一致性
 
 A read is guaranteed to return the most recent write for a given client.
@@ -162,10 +170,4 @@ nginxqps : 极限3万左右apache httpdqps: 极限1000左右
 memcache vs redis
 
 单线程20000次写入数据，memcached写入时间约为9000ms, redis写入时间约为13000ms20000次读取数据，memcached读取时间约为7000ms, redis读取时间约为6000ms
-多线程60个并发redis每个线程写入1000次数据，执行总用时约为5000ms；Memcached每个线程写入1000次数据，执行总用时约为10000msredis每个线程读取10 ...</div><div class="read-more"><a class="more" href="/2018/05/23/常见框架性能数据/#more">ReadMore</a></div><hr></div><div class="recent-post-item"><div class="post-title"><a href="/2018/05/20/架构师学习1/">架构师学习1</a></div><div class="post-time"><i class="fa fa-table"></i><time datetime="2018-05-20T14:27:57.000Z">2018-05-20</time><i class="fa fa-edit"></i><time datetime="2018-05-20T14:27:57.000Z">2018-05-20</time></div><div class="recent-post-content">架构师学习1架构是什么?
-软件架构指软件系统的顶层结构。
-
-这个定义看似很简单，但包含的信息很丰富，基本上把系统、子系统、模块、组件、架构等概念都串起来了。
-系统与子系统：系统是由一系列有关联，按特定规则组成的个体，并且产生新的能力，而系统与子系统则是观察的交角度不同。
-模块与组件：模块是从逻辑角度去看待，而组件是从物理角度去看待。
-框架与架构：框架是规范也是约束，可以理解为封闭性的话题，定义好，让别人如何去使用，而架构是一种结构，是一种开放性的话题，如何去设计组织架构，如何让架构更具有拓展性，减少沟通错误成本框架与架构：框架是规范也是约束，可以理解为封闭性的话题，定义好，让别人如何去使用，而 ...</div><div class="read-more"><a class="more" href="/2018/05/20/架构师学习1/#more">ReadMore</a></div><hr></div></section><nav class="cxo-page-nav"><span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/">NEXT &#62;</a></nav></section></article><footer id="cxo-footer-outer"><div id="cxo-footer-inner"><p class="footer-container"><span>Site by </span><a href="http://hexo.io"><span>Hexo</span></a><span> | theme </span><a href="https://github.com/Longlongyu/hexo-theme-Cxo"><span>Cxo</span></a></p><i class="fa fa-user"> </i><span id="busuanzi_value_site_uv"></span><span> | </span><i class="fa fa-eye"> </i><span id="busuanzi_value_site_pv"></span></div></footer><!-- catelog--><!-- top--><i class="fa fa-arrow-up close" id="go-up" aria-hidden="true"></i></body></html>
+多线程60个并发redis每个线程写入1000次数据，执行总用时约为5000ms；Memcached每个线程写入1000次数据，执行总用时约为10000msredis每个线程读取10 ...</div><div class="read-more"><a class="more" href="/2018/05/23/常见框架性能数据/#more">ReadMore</a></div><hr></div></section><nav class="cxo-page-nav"><span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/">NEXT &#62;</a></nav></section></article><footer id="cxo-footer-outer"><div id="cxo-footer-inner"><p class="footer-container"><span>Site by </span><a href="http://hexo.io"><span>Hexo</span></a><span> | theme </span><a href="https://github.com/Longlongyu/hexo-theme-Cxo"><span>Cxo</span></a></p><i class="fa fa-user"> </i><span id="busuanzi_value_site_uv"></span><span> | </span><i class="fa fa-eye"> </i><span id="busuanzi_value_site_pv"></span></div></footer><!-- catelog--><!-- top--><i class="fa fa-arrow-up close" id="go-up" aria-hidden="true"></i></body></html>
